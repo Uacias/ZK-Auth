@@ -12,7 +12,7 @@
   --font-mono: "Fira Code", "JetBrains Mono", "Courier New", monospace;
 }
 
-/* 🌞 Light Theme (mniej jaskrawy) */
+/* 🌞 Light Theme */
 .light {
   --color-background: #ececec; 
   --color-text: #212529; 
@@ -24,14 +24,14 @@ body {
   background-color: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-mono);
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* 🔹 Ustawienie dla komponentów */
+
 .card {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
 }
+
 
 .button {
   background-color: var(--color-primary);
@@ -47,4 +47,41 @@ body {
   background-color: var(--color-card);
   border: 1px solid var(--color-border);
   color: var(--color-text);
+}
+
+
+main {
+  display: grid;
+  grid-template-rows: auto 1fr; 
+  height: 100vh;
+}
+
+
+.content {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  flex-direction: column;
+  padding: 16px;
+  height: calc(100vh - 80px); 
+  overflow-y: auto;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background-color: var(--color-background);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav {
+  background-color: var(--color-background);
+  padding: 16px;
+  z-index: 20;
 }

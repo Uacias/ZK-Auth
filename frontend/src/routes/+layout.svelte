@@ -1,8 +1,14 @@
 <script lang="ts">
-	import '../app.css'; // Globalne style
+	import '../app.css';
 	import Navbar from '$lib/ui/Navbar.svelte';
 </script>
 
-<Navbar />
+<main class="grid-layout">
+	<header>
+		<Navbar />
+	</header>
 
-<slot />
+	<div class="content">
+		<slot />
+	</div>
+</main>
