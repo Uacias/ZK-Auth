@@ -9,12 +9,12 @@
 </script>
 
 <button
-	class="rounded-full p-2 transition-all hover:bg-gray-600 dark:hover:bg-gray-400"
 	on:click={toggleTheme}
+	class="rounded-full p-2 transition-all hover:bg-gray-600 dark:hover:bg-gray-400"
 >
 	{#if $theme === 'dark'}
-		<Moon size="24" color="white" />
+		<Moon size="24" class="text-white" />
 	{:else}
-		<Sun size="24" color="black" />
+		<Sun size="24" class="text-black" />
 	{/if}
 </button>
