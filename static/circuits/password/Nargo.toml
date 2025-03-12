@@ -1,0 +1,5 @@
+[package]
+name = "password"
+type = "bin"
+authors = ["Uacias"]
+license = "MIT"
