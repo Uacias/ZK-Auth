@@ -7,6 +7,12 @@
     ],
     "scripts": {
         "dev": "npm run dev --workspace=frontend",
-        "build": "npm run build --workspace=frontend"
+        "build": "npm run build --workspace=frontend",
+        "preview": "npm run preview --workspace=frontend",
+        "prepare": "npm run prepare --workspace=frontend",
+        "check": "npm run check --workspace=frontend",
+        "check:watch": "npm run check:watch --workspace=frontend",
+        "format": "npm run format --workspace=frontend",
+        "lint": "npm run lint --workspace=frontend"
     }
 }

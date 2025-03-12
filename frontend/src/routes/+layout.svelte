@@ -1,6 +1,8 @@
 <script lang="ts">
-	import '../app.css';
-	let { children } = $props();
+	import '../app.css'; // Globalne style
+	import Navbar from '$lib/ui/Navbar.svelte';
 </script>
 
-{@render children()}
+<Navbar />
+
+<slot />
