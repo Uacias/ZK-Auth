@@ -10,7 +10,7 @@ use tracing::info;
 pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 #[derive(Debug)]
-pub struct DbClient {
+pub struct DbInitializer {
     url: String,
     user: String,
     password: String,
@@ -18,7 +18,7 @@ pub struct DbClient {
     database: String,
 }
 
-impl DbClient {
+impl DbInitializer {
     pub fn from_args(args: CliArgs) -> Self {
         Self {
             url: args.surreal_url,

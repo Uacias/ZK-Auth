@@ -8,6 +8,10 @@ use tracing::error;
 pub enum ServerError {
     #[error("database error")]
     Db,
+    #[error("could not create a record")]
+    NoRecordCreated,
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }
 
 impl IntoResponse for ServerError {
