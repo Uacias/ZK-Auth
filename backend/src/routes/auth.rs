@@ -10,7 +10,7 @@ use surrealdb::Connection;
 pub fn auth_routes<C: Connection + Clone + Send + Sync + 'static>() -> Router<AppState<C>> {
     Router::new()
         .route("/register", post(register::<C>))
-        .route("/login", post(login::<C>))
+        .route("/login", post(login))
 }
 
 async fn register<C: Connection + Clone + Send + Sync + 'static>(
@@ -21,7 +21,7 @@ async fn register<C: Connection + Clone + Send + Sync + 'static>(
     Ok(Json(user))
 }
 
-async fn login<C: Connection + Clone + Send + Sync + 'static>(
+async fn login(
     State(state): State<AppState<impl Connection + Clone + Send + Sync + 'static>>,
     Json(payload): Json<LoginPayload>,
 ) -> Result<Json<LoginResponse>, ServerError> {
