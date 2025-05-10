@@ -24,12 +24,11 @@ async fn main() -> Result<(), ServerError> {
     let args = CliArgs::parse();
     let db = DbInitializer::from_args(args.clone()).connect().await?;
 
-    // Utwórz AppState
     let state = AppState { db };
 
     let app = Router::new()
         .nest("/auth", auth_routes())
-        .with_state(state.clone()); // <- ważne
+        .with_state(state.clone());
 
     let listener = TcpListener::bind(&args.bind).await?;
     info!("🚀 Server running at http://{}", args.bind);

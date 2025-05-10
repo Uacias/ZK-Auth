@@ -1,10 +1,8 @@
-use serde_json::json;
-
 use crate::{
     errors::ServerError,
-    models::user::{RegisterPayload, User},
+    models::user::{LoginPayload, LoginResponse, RegisterPayload, User},
 };
-
+use serde_json::json;
 use surrealdb::Surreal;
 
 pub async fn register_user<C>(
@@ -22,6 +20,37 @@ where
         }))
         .await?;
     created.ok_or(ServerError::NoRecordCreated)
+}
+
+pub async fn login_user<C>(
+    db: &Surreal<C>,
+    payload: LoginPayload,
+) -> Result<LoginResponse, ServerError>
+where
+    C: surrealdb::Connection,
+{
+    let sql = "SELECT * FROM user WHERE name = $name";
+    let mut response = db
+        .query(sql)
+        .bind(("name", payload.name.clone()))
+        .await
+        .map_err(|_| ServerError::Db)?;
+
+    let user: Option<User> = response.take(0).map_err(|_| ServerError::Db)?;
+
+    let user = user.ok_or(ServerError::InvalidCredentials)?;
+
+    if user.password != payload.password {
+        return Err(ServerError::InvalidCredentials);
+    }
+
+    Ok(LoginResponse {
+        id: match &user.id.id {
+            surrealdb::sql::Id::String(s) => s.clone(),
+            _ => user.id.to_string(),
+        },
+        name: user.name,
+    })
 }
 
 #[cfg(test)]

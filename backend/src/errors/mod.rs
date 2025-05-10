@@ -10,6 +10,8 @@ pub enum ServerError {
     Db,
     #[error("could not create a record")]
     NoRecordCreated,
+    #[error("invalid login credentials")]
+    InvalidCredentials,
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
