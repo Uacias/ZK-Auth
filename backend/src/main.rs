@@ -1,9 +1,8 @@
-mod args;
-mod errors;
-mod models;
-mod routes;
-mod services;
-mod utils;
+use backend::args;
+use backend::errors;
+use backend::routes;
+use backend::utils;
+use backend::utils::db::state::AppState;
 
 use args::CliArgs;
 use axum::Router;
@@ -23,9 +22,15 @@ async fn main() -> Result<(), ServerError> {
         .init();
 
     let args = CliArgs::parse();
-    DbInitializer::from_args(args.clone()).connect().await?;
+    let db = DbInitializer::from_args(args.clone()).connect().await?;
 
-    let app = Router::new().nest("/auth", auth_routes());
+    // Utwórz AppState
+    let state = AppState { db };
+
+    let app = Router::new()
+        .nest("/auth", auth_routes())
+        .with_state(state.clone()); // <- ważne
+
     let listener = TcpListener::bind(&args.bind).await?;
     info!("🚀 Server running at http://{}", args.bind);
 

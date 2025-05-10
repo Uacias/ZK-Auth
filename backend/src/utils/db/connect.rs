@@ -1,13 +1,10 @@
 use crate::{args::CliArgs, errors::ServerError};
-use std::sync::LazyLock;
 use surrealdb::{
     Surreal,
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
 };
 use tracing::info;
-
-pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 #[derive(Debug)]
 pub struct DbInitializer {
@@ -29,18 +26,18 @@ impl DbInitializer {
         }
     }
 
-    pub async fn connect(&self) -> Result<(), ServerError> {
-        DB.connect::<Ws>(&self.url).await?;
-        DB.signin(Root {
+    pub async fn connect(&self) -> Result<Surreal<Client>, ServerError> {
+        let db = Surreal::new::<Ws>(&self.url).await?;
+        db.signin(Root {
             username: &self.user,
             password: &self.password,
         })
         .await?;
-        DB.use_ns(&self.namespace).use_db(&self.database).await?;
+        db.use_ns(&self.namespace).use_db(&self.database).await?;
         info!(
             "Successfully connected to SurrealDB at {} (namespace: {}, database: {})",
             self.url, self.namespace, self.database
         );
-        Ok(())
+        Ok(db)
     }
 }
