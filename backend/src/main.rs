@@ -10,6 +10,7 @@ use clap::Parser;
 use errors::ServerError;
 use routes::auth::auth_routes;
 use tokio::net::TcpListener;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 use utils::db::connect::DbInitializer;
@@ -26,9 +27,15 @@ async fn main() -> Result<(), ServerError> {
 
     let state = AppState { db };
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods([axum::http::Method::GET, axum::http::Method::POST])
+        .allow_headers(Any);
+
     let app = Router::new()
         .nest("/auth", auth_routes())
-        .with_state(state.clone());
+        .with_state(state.clone())
+        .layer(cors);
 
     let listener = TcpListener::bind(&args.bind).await?;
     info!("🚀 Server running at http://{}", args.bind);

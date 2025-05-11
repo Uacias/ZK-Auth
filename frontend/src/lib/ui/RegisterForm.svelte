@@ -8,7 +8,7 @@
 	let errorMessage = '';
 	let successMessage = '';
 
-	async function handleLogin() {
+	async function handleRegister() {
 		errorMessage = '';
 		successMessage = '';
 
@@ -22,7 +22,7 @@
 		}
 
 		try {
-			const res = await fetch('http://localhost:8080/auth/login', {
+			const res = await fetch('http://0.0.0.0:8080/auth/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -36,17 +36,18 @@
 			}
 
 			const user = await res.json();
-			successMessage = `✅ Logged in as "${user.name}" (ID: ${user.id})`;
-			console.log('Login success:', user);
+			successMessage = `✅ Registered user "${user.name}" successfully`;
+			username = '';
+			password = '';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : String(err);
-			console.error('❌ Login error:', errorMessage);
+			console.error('❌ Register error:', errorMessage);
 		}
 	}
 </script>
 
-<Card title="Login" class_="mt-3">
-	<form on:submit|preventDefault={handleLogin} class="mt-4 flex flex-col gap-3">
+<Card title="Register" class_="mt-3">
+	<form on:submit|preventDefault={handleRegister} class="mt-4 flex flex-col gap-3">
 		<Input type="text" bind:value={username} placeholder="Username" autocomplete="username" />
 		<Input
 			type="password"
@@ -62,6 +63,6 @@
 			<p class="text-sm text-green-500">{successMessage}</p>
 		{/if}
 
-		<Button text="Log In" onClick={handleLogin} class_="mt-2" />
+		<Button text="Register" onClick={handleRegister} class_="mt-2" />
 	</form>
 </Card>

@@ -34,11 +34,20 @@ where
         .query(sql)
         .bind(("name", payload.name.clone()))
         .await
-        .map_err(|_| ServerError::Db)?;
+        .map_err(|e| {
+            tracing::error!("❌ DB query error: {:?}", e);
+            ServerError::Db
+        })?;
 
-    let user: Option<User> = response.take(0).map_err(|_| ServerError::Db)?;
+    let users: Vec<User> = response.take(0).map_err(|e| {
+        tracing::error!("❌ DB result take error: {:?}", e);
+        ServerError::Db
+    })?;
 
-    let user = user.ok_or(ServerError::InvalidCredentials)?;
+    let user = users
+        .into_iter()
+        .next()
+        .ok_or(ServerError::InvalidCredentials)?;
 
     if user.password != payload.password {
         return Err(ServerError::InvalidCredentials);
