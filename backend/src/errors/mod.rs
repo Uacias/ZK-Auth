@@ -3,14 +3,8 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use serde::Serialize;
 use thiserror::Error;
 use tracing::error;
-
-#[derive(Serialize)]
-struct ErrorResponse {
-    error: String,
-}
 
 #[derive(Debug, Error)]
 pub enum ServerError {
