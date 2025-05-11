@@ -6,8 +6,9 @@
 </script>
 
 <input
-	class="input focus:border-primary w-full rounded p-2 focus:outline-none {class_}"
+	class={`input focus:border-primary w-full rounded p-2 focus:outline-none ${class_}`}
 	{type}
 	bind:value
 	{placeholder}
+	{...$$restProps}
 />
