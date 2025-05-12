@@ -20,8 +20,8 @@
 			},
 			{
 				loading: 'Registering...',
-				success: '✅ Registered successfully!',
-				error: '❌ Registration failed'
+				success: 'Registered successfully!',
+				error: 'Registration failed'
 			}
 		);
 	}

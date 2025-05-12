@@ -21,8 +21,8 @@
 			},
 			{
 				loading: 'Logging in...',
-				success: '✅ Logged in successfully!',
-				error: '❌ Login failed'
+				success: 'Logged in successfully!',
+				error: 'Login failed'
 			}
 		);
 	}

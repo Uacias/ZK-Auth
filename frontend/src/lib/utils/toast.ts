@@ -1,24 +1,39 @@
-import { showToast } from '$lib/stores/toast';
+import { toastStore } from '$lib/stores/toast';
 import { ApiError } from '$lib/utils/api';
 
 export async function wrapWithToast<T>(
 	fn: () => Promise<T>,
 	messages: { loading: string; success: string; error: string }
 ): Promise<T | undefined> {
-	try {
-		showToast({ type: 'loading', message: messages.loading });
+	const loadingId = toastStore.addToast({
+		type: 'loading',
+		message: messages.loading
+	});
 
+	try {
 		const result = await fn();
 
-		showToast({ type: 'success', message: messages.success });
+		toastStore.removeToast(loadingId);
+		toastStore.addToast({
+			type: 'success',
+			message: messages.success
+		});
 
 		return result;
 	} catch (err) {
+		toastStore.removeToast(loadingId);
+
 		if (err instanceof ApiError) {
 			const detailStr = err.details?.length ? `: ${err.details.join(', ')}` : '';
-			showToast({ type: 'error', message: `${err.message}${detailStr}` });
+			toastStore.addToast({
+				type: 'error',
+				message: `${err.message}${detailStr}`
+			});
 		} else {
-			showToast({ type: 'error', message: 'Unexpected error occurred' });
+			toastStore.addToast({
+				type: 'error',
+				message: 'Unexpected error occurred'
+			});
 		}
 		console.error('❌ Error in toast wrapper:', err);
 	}
