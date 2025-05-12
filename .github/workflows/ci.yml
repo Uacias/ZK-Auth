@@ -44,10 +44,10 @@ jobs:
       - name: Run tests
         run: cargo test --workspace --all-targets --locked -- --nocapture
 
-            - name: Set up Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install root deps
         run: npm ci
@@ -57,4 +57,3 @@ jobs:
 
       - name: Run linter (ESLint + Prettier)
         run: npm run lint --workspace=frontend
-
