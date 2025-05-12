@@ -2,46 +2,29 @@
 	import Input from '$lib/ui/Input.svelte';
 	import Button from '$lib/ui/Button.svelte';
 	import Card from '$lib/ui/Card.svelte';
+	import { api } from '$lib/utils/api';
+	import { wrapWithToast } from '$lib/utils/toast';
 
 	let username = '';
 	let password = '';
-	let errorMessage = '';
-	let successMessage = '';
 
 	async function handleLogin() {
-		errorMessage = '';
-		successMessage = '';
-
-		if (username.trim() === '' || password.trim() === '') {
-			errorMessage = 'Username and password are required!';
-			return;
-		}
-		if (password.length < 6) {
-			errorMessage = 'Password must be at least 6 characters long!';
-			return;
-		}
-
-		try {
-			const res = await fetch('http://localhost:8080/auth/login', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ name: username, password })
-			});
-
-			if (!res.ok) {
-				const err = await res.text();
-				throw new Error(err);
+		await wrapWithToast(
+			async () => {
+				const user = await api<{ id: string; name: string }>('http://localhost:8080/auth/login', {
+					method: 'POST',
+					body: JSON.stringify({ name: username, password })
+				});
+				console.log('Login success:', user);
+				username = '';
+				password = '';
+			},
+			{
+				loading: 'Logging in...',
+				success: 'Logged in successfully!',
+				error: 'Login failed'
 			}
-
-			const user = await res.json();
-			successMessage = `✅ Logged in as "${user.name}" (ID: ${user.id})`;
-			console.log('Login success:', user);
-		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : String(err);
-			console.error('❌ Login error:', errorMessage);
-		}
+		);
 	}
 </script>
 
@@ -54,14 +37,6 @@
 			placeholder="Password"
 			autocomplete="current-password"
 		/>
-		{#if errorMessage}
-			<p class="text-sm text-red-500">{errorMessage}</p>
-		{/if}
-
-		{#if successMessage}
-			<p class="text-sm text-green-500">{successMessage}</p>
-		{/if}
-
 		<Button text="Log In" onClick={handleLogin} class_="mt-2" />
 	</form>
 </Card>

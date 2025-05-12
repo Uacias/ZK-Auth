@@ -4,6 +4,7 @@ use crate::{
 };
 use serde_json::json;
 use surrealdb::Surreal;
+use validator::Validate;
 
 pub async fn register_user<C>(
     db: &Surreal<C>,
@@ -12,13 +13,36 @@ pub async fn register_user<C>(
 where
     C: surrealdb::Connection,
 {
+    payload.validate().map_err(|e| {
+        let details = e
+            .field_errors()
+            .iter()
+            .flat_map(|(_, errs)| {
+                errs.iter()
+                    .map(|err| err.message.clone().unwrap_or_default().to_string())
+            })
+            .collect::<Vec<_>>();
+
+        tracing::warn!("❌ Register validation error: {:?}", details);
+
+        ServerError::BadRequest {
+            message: "Invalid input".to_string(),
+            details,
+        }
+    })?;
+
     let created: Option<User> = db
         .create("user")
         .content(json!({
             "name": payload.name,
             "password": payload.password,
         }))
-        .await?;
+        .await
+        .map_err(|e| {
+            tracing::error!("❌ Failed to create user: {:?}", e);
+            ServerError::Db(e.to_string())
+        })?;
+
     created.ok_or(ServerError::NoRecordCreated)
 }
 
@@ -29,6 +53,24 @@ pub async fn login_user<C>(
 where
     C: surrealdb::Connection,
 {
+    payload.validate().map_err(|e| {
+        let details = e
+            .field_errors()
+            .iter()
+            .flat_map(|(_, errs)| {
+                errs.iter()
+                    .map(|err| err.message.clone().unwrap_or_default().to_string())
+            })
+            .collect::<Vec<_>>();
+
+        tracing::warn!("❌ Login validation error: {:?}", details);
+
+        ServerError::BadRequest {
+            message: "Invalid input".to_string(),
+            details,
+        }
+    })?;
+
     let sql = "SELECT * FROM user WHERE name = $name";
     let mut response = db
         .query(sql)
@@ -36,12 +78,12 @@ where
         .await
         .map_err(|e| {
             tracing::error!("❌ DB query error: {:?}", e);
-            ServerError::Db
+            ServerError::Db(e.to_string())
         })?;
 
     let users: Vec<User> = response.take(0).map_err(|e| {
-        tracing::error!("❌ DB result take error: {:?}", e);
-        ServerError::Db
+        tracing::error!("❌ Failed to extract user list from query result: {:?}", e);
+        ServerError::Db(e.to_string())
     })?;
 
     let user = users

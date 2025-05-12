@@ -21,3 +21,5 @@ tracing-subscriber = { version = "0.3", features = [
     "fmt",
     "json",
 ] }
+validator = "0.20.0"
+validator_derive = "0.20.0"

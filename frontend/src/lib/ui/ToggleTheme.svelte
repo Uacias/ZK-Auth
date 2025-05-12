@@ -1,5 +1,5 @@
 <script>
-	import { theme } from '$lib/store';
+	import { theme } from '$lib/stores/store';
 	import { Sun, Moon } from 'lucide-svelte';
 
 	function toggleTheme() {
