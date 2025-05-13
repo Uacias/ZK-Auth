@@ -4,11 +4,11 @@ use common::{random_string, spawn_test_server};
 use reqwest::Client;
 use serde_json::json;
 
-mod auth_plain {
+mod auth_hashing {
     use super::*;
 
     #[tokio::test]
-    async fn test_register_endpoint() {
+    async fn test_register_hashed_endpoint() {
         let (base_url, _server_handle) = spawn_test_server().await;
 
         let client = Client::new();
@@ -16,7 +16,7 @@ mod auth_plain {
         let random_pass = random_string(15);
 
         let res = client
-            .post(format!("{}/auth/register", base_url))
+            .post(format!("{}/auth/register_hashed", base_url))
             .json(&json!({
                 "name": random_name,
                 "password": random_pass
@@ -25,13 +25,18 @@ mod auth_plain {
             .await
             .expect("Failed to send request");
 
-        assert!(res.status().is_success(), "Status: {}", res.status());
+        assert!(
+            res.status().is_success(),
+            "Status code: {}, body: {:?}",
+            res.status(),
+            res.text().await.ok()
+        );
         let body: serde_json::Value = res.json().await.expect("Invalid JSON");
-        println!("Register response: {:?}", body);
+        println!("Register hashed response: {:?}", body);
     }
 
     #[tokio::test]
-    async fn test_login_endpoint() {
+    async fn test_login_hashed_endpoint() {
         let (base_url, _server_handle) = spawn_test_server().await;
         let client = Client::new();
 
@@ -39,7 +44,7 @@ mod auth_plain {
         let random_pass = random_string(15);
 
         let res = client
-            .post(format!("{}/auth/register", base_url))
+            .post(format!("{}/auth/register_hashed", base_url))
             .json(&json!({
                 "name": random_name,
                 "password": random_pass
@@ -55,7 +60,7 @@ mod auth_plain {
         );
 
         let res = client
-            .post(format!("{}/auth/login", base_url))
+            .post(format!("{}/auth/login_hashed", base_url))
             .json(&json!({
                 "name": random_name,
                 "password": random_pass
@@ -65,7 +70,8 @@ mod auth_plain {
             .expect("Failed to send login request");
 
         assert!(res.status().is_success(), "Login failed: {}", res.status());
+
         let body: serde_json::Value = res.json().await.expect("Invalid JSON");
-        println!("Login response: {:?}", body);
+        println!("Login hashed response: {:?}", body);
     }
 }

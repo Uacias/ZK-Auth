@@ -23,6 +23,9 @@ pub enum ServerError {
         details: Vec<String>,
     },
 
+    #[error("Internal server error: {0}")]
+    InternalServerError(String),
+
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -45,6 +48,11 @@ impl IntoResponse for ServerError {
             ServerError::Io(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "IO error".to_string(),
+                vec![e.to_string()],
+            ),
+            ServerError::InternalServerError(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Internal error".to_string(),
                 vec![e.to_string()],
             ),
         };
