@@ -1,2 +1,2 @@
 [workspace]
-members = ["static/circuits/age"]
+members = ["static/circuits/login"]

@@ -1,5 +1,0 @@
-[package]
-name = "age"
-type = "bin"
-authors = ["Uacias"]
-license = "MIT"
