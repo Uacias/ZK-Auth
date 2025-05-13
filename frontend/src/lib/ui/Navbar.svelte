@@ -21,6 +21,9 @@
 		<button on:click={() => goto('/hash-login')} class="text-secondary hover:underline">
 			Hash Login
 		</button>
+		<button on:click={() => goto('/zk-register')} class="text-secondary hover:underline">
+			ZK Register
+		</button>
 
 		<ToggleTheme />
 	</div>
