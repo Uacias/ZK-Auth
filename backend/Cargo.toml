@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+argon2.workspace = true
 axum.workspace = true
 clap.workspace = true
 jsonwebtoken.workspace = true
 once_cell.workspace = true
+password-hash.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 surrealdb.workspace = true
@@ -16,8 +18,8 @@ tokio.workspace = true
 tower-http.workspace = true
 tracing-subscriber.workspace = true
 tracing.workspace = true
-validator.workspace = true
 validator_derive.workspace = true
+validator.workspace = true
 
 [dev-dependencies]
 rand.workspace = true
