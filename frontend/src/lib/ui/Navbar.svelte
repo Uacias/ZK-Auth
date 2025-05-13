@@ -9,12 +9,19 @@
 	<a href="/" class="text-primary text-xl font-bold">ZK-Auth</a>
 
 	<div class="flex items-center gap-4">
-		<button on:click={() => goto('/simple-login')} class="text-secondary hover:underline">
-			Simple Login
-		</button>
 		<button on:click={() => goto('/simple-register')} class="text-secondary hover:underline">
-			Simple Register
+			Register
 		</button>
+		<button on:click={() => goto('/simple-login')} class="text-secondary hover:underline">
+			Login
+		</button>
+		<button on:click={() => goto('/hash-register')} class="text-secondary hover:underline">
+			Hash Register
+		</button>
+		<button on:click={() => goto('/hash-login')} class="text-secondary hover:underline">
+			Hash Login
+		</button>
+
 		<ToggleTheme />
 	</div>
 </nav>

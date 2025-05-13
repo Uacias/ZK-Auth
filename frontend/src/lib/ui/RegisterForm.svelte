@@ -5,13 +5,14 @@
 	import { api } from '$lib/utils/api';
 	import { wrapWithToast } from '$lib/utils/toast';
 
+	export let endpoint = 'register';
 	let username = '';
 	let password = '';
 
 	async function handleRegister() {
 		await wrapWithToast(
 			async () => {
-				await api<{ name: string }>('http://localhost:8080/auth/register', {
+				await api<{ name: string }>(`http://localhost:8080/auth/${endpoint}`, {
 					method: 'POST',
 					body: JSON.stringify({ name: username, password })
 				});
@@ -36,6 +37,6 @@
 			placeholder="Password"
 			autocomplete="current-password"
 		/>
-		<Button text="Register" onClick={handleRegister} class_="mt-2" />
+		<Button text="Register" class_="mt-2" />
 	</form>
 </Card>

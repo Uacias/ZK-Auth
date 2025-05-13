@@ -5,16 +5,20 @@
 	import { api } from '$lib/utils/api';
 	import { wrapWithToast } from '$lib/utils/toast';
 
+	export let endpoint = 'login';
 	let username = '';
 	let password = '';
 
 	async function handleLogin() {
 		await wrapWithToast(
 			async () => {
-				const user = await api<{ id: string; name: string }>('http://localhost:8080/auth/login', {
-					method: 'POST',
-					body: JSON.stringify({ name: username, password })
-				});
+				const user = await api<{ id: string; name: string }>(
+					`http://localhost:8080/auth/${endpoint}`,
+					{
+						method: 'POST',
+						body: JSON.stringify({ name: username, password })
+					}
+				);
 				console.log('Login success:', user);
 				username = '';
 				password = '';
@@ -37,6 +41,6 @@
 			placeholder="Password"
 			autocomplete="current-password"
 		/>
-		<Button text="Log In" onClick={handleLogin} class_="mt-2" />
+		<Button text="Log In" class_="mt-2" />
 	</form>
 </Card>
