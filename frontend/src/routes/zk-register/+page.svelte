@@ -7,7 +7,7 @@
 	import { initZk, poseidonHash2 } from '$lib/utils/zk';
 	import { onMount } from 'svelte';
 
-	let username = '';
+	let name = '';
 	let password = '';
 
 	onMount(() => {
@@ -35,23 +35,23 @@
 	async function handleZkRegister() {
 		await wrapWithToast(
 			async () => {
-				const usernameField = stringToField(username);
+				const nameField = stringToField(name);
 				const passwordField = stringToField(password);
 				const { field: saltField } = generateSalt();
 
 				const passwordHash = await poseidonHash2(passwordField, saltField);
-				const commitment = await poseidonHash2(usernameField, passwordHash);
+				const commitment = await poseidonHash2(nameField, passwordHash);
 
-				await api('http://localhost:8080/auth/zk-register', {
+				await api('http://localhost:8080/auth/zk_register', {
 					method: 'POST',
 					body: JSON.stringify({
-						username,
+						name,
 						salt: saltField.toString(),
 						commitment: commitment.toString()
 					})
 				});
 
-				username = '';
+				name = '';
 				password = '';
 			},
 			{
@@ -65,7 +65,7 @@
 
 <Card title="zk-Register" class_="mt-3 max-w-md mx-auto">
 	<form on:submit|preventDefault={handleZkRegister} class="mt-4 flex flex-col gap-3">
-		<Input bind:value={username} placeholder="Username" autocomplete="username" />
+		<Input bind:value={name} placeholder="Name" autocomplete="name" />
 		<Input
 			bind:value={password}
 			placeholder="Password"

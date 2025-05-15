@@ -1,9 +1,10 @@
 use crate::{
     errors::ServerError,
-    models::user::{LoginPayload, LoginResponse, RegisterPayload, User},
+    models::user::{LoginPayload, LoginResponse, RegisterPayload, User, ZkRegisterPayload, ZkUser},
     services::{
         auth_hashing_service::{login_user_hashed, register_user_hashed},
         auth_service::{login_user, register_user},
+        auth_zk_service::zk_register_user,
     },
     utils::db::state::AppState,
 };
@@ -16,6 +17,7 @@ pub fn auth_routes<C: Connection + Clone + Send + Sync + 'static>() -> Router<Ap
         .route("/login", post(login))
         .route("/register_hashed", post(register_hashed::<C>))
         .route("/login_hashed", post(login_hashed))
+        .route("/zk_register", post(zk_register::<C>))
 }
 
 async fn register<C: Connection + Clone + Send + Sync + 'static>(
@@ -49,5 +51,13 @@ async fn login_hashed(
 ) -> Result<Json<LoginResponse>, ServerError> {
     let db = &state.db;
     let result = login_user_hashed(db, payload).await?;
+    Ok(Json(result))
+}
+
+async fn zk_register<C: Connection + Clone + Send + Sync + 'static>(
+    State(state): State<AppState<C>>,
+    Json(payload): Json<ZkRegisterPayload>,
+) -> Result<Json<ZkUser>, ServerError> {
+    let result = zk_register_user(&state.db, payload).await?;
     Ok(Json(result))
 }
