@@ -41,6 +41,6 @@
 			placeholder="Password"
 			autocomplete="current-password"
 		/>
-		<Button text="Log In" class_="mt-2" />
+		<Button type="submit" variant="primary" class_="mt-2">Log In</Button>
 	</form>
 </Card>

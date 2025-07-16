@@ -42,7 +42,7 @@
 			const challenge = await zkGetChallenge(username);
 			
 			// Step 3: Generate commitment using salt
-			const commitment = generateCommitment(password, salt);
+			const commitment = await generateCommitment(password, salt);
 			
 			// Step 4: Generate ZK proof
 			addToast('Generating zero-knowledge proof...', 'info');

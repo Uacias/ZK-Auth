@@ -39,7 +39,7 @@
 		try {
 			// Generate salt and commitment for ZK authentication
 			const salt = generateSalt();
-			const commitment = generateCommitment(password, salt);
+			const commitment = await generateCommitment(password, salt);
 
 			const registerData: ZkRegisterRequest = {
 				username,
