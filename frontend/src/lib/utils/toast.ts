@@ -1,6 +1,13 @@
 import { toastStore } from '$lib/stores/toast';
 import { ApiError } from '$lib/utils/api';
 
+export function addToast(message: string, type: 'success' | 'error' | 'info' | 'loading' = 'info') {
+	toastStore.addToast({
+		type,
+		message
+	});
+}
+
 export async function wrapWithToast<T>(
 	fn: () => Promise<T>,
 	messages: { loading: string; success: string; error: string }
