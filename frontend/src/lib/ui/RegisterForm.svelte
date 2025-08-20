@@ -37,6 +37,6 @@
 			placeholder="Password"
 			autocomplete="current-password"
 		/>
-		<Button text="Register" class_="mt-2" />
+		<Button type="submit" variant="primary" class_="mt-2">Register</Button>
 	</form>
 </Card>

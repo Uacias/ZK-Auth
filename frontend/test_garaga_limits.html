@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Garaga Poseidon Limits Test</title>
+</head>
+<body>
+    <h1>Garaga Poseidon Field Limits Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        import { init, poseidonHashBN254 } from 'garaga';
+
+        const BN254_FIELD_MODULUS = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+        const results = document.getElementById('results');
+
+        function stringToBigInt(str) {
+            let result = 0n;
+            for (let i = 0; i < str.length; i++) {
+                result = result * 256n + BigInt(str.charCodeAt(i));
+            }
+            return result;
+        }
+
+        function log(message) {
+            console.log(message);
+            results.innerHTML += `<p>${message}</p>`;
+        }
+
+        async function testGaragaLimits() {
+            await init();
+            log("🔧 Garaga initialized");
+
+            // Test Case 1: Short string that should fit in field
+            const shortString = "alice";
+            const shortBigInt = stringToBigInt(shortString);
+            log(`📝 Short string: "${shortString}"`);
+            log(`🔢 Short BigInt: ${shortBigInt}`);
+            log(`🔢 BN254 Modulus: ${BN254_FIELD_MODULUS}`);
+            log(`✅ Short fits in field: ${shortBigInt < BN254_FIELD_MODULUS}`);
+
+            try {
+                const shortHash = poseidonHashBN254(shortBigInt, 12345n);
+                log(`✅ Short string hash SUCCESS: ${shortHash}`);
+            } catch (error) {
+                log(`❌ Short string hash FAILED: ${error.message}`);
+            }
+
+            // Test Case 2: Very long string that should exceed field
+            const longString = "this_is_a_very_very_very_long_username_that_should_definitely_exceed_the_bn254_field_modulus_and_cause_an_error_when_converted_to_bigint_because_it_will_be_larger_than_the_maximum_allowed_field_element";
+            const longBigInt = stringToBigInt(longString);
+            log(`📝 Long string: "${longString}"`);
+            log(`🔢 Long BigInt: ${longBigInt}`);
+            log(`❌ Long exceeds field: ${longBigInt >= BN254_FIELD_MODULUS}`);
+
+            try {
+                const longHash = poseidonHashBN254(longBigInt, 12345n);
+                log(`❌ Long string hash SUCCESS (unexpected): ${longHash}`);
+            } catch (error) {
+                log(`✅ Long string hash FAILED (expected): ${error.message}`);
+            }
+
+            // Test Case 3: Exactly at field modulus
+            const exactLimit = BN254_FIELD_MODULUS - 1n;
+            log(`🔢 Exact limit test: ${exactLimit}`);
+
+            try {
+                const exactHash = poseidonHashBN254(exactLimit, 12345n);
+                log(`✅ Exact limit hash SUCCESS: ${exactHash}`);
+            } catch (error) {
+                log(`❌ Exact limit hash FAILED: ${error.message}`);
+            }
+
+            // Test Case 4: Just over field modulus
+            const overLimit = BN254_FIELD_MODULUS + 1n;
+            log(`🔢 Over limit test: ${overLimit}`);
+
+            try {
+                const overHash = poseidonHashBN254(overLimit, 12345n);
+                log(`❌ Over limit hash SUCCESS (unexpected): ${overHash}`);
+            } catch (error) {
+                log(`✅ Over limit hash FAILED (expected): ${error.message}`);
+            }
+        }
+
+        testGaragaLimits().catch(console.error);
+    </script>
+</body>
+</html>

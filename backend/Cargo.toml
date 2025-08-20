@@ -20,6 +20,8 @@ tracing-subscriber.workspace = true
 tracing.workspace = true
 validator_derive.workspace = true
 validator.workspace = true
+chrono.workspace = true
+rand.workspace = true
 
 [dev-dependencies]
 rand.workspace = true

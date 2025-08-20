@@ -1,8 +1,7 @@
 [package]
-name = "password"
+name = "zk"
 type = "bin"
-authors = ["Uacias"]
-license = "MIT"
+authors = [""]
 
 [dependencies]
 poseidon = { tag = "v0.1.1", git = "https://github.com/noir-lang/poseidon" }
