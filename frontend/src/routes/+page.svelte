@@ -3,9 +3,9 @@
 <div class="content">
 	<h1 class="text-primary text-4xl font-bold">Hello ZK-Auth!</h1>
 	<p class="text-secondary mt-2 text-lg">Private authentication with Zero-Knowledge Proof</p>
-	<p class="text-secondary text-md mt-4">Choose between three authentication methods:</p>
+	<p class="text-secondary text-md mt-4">Choose between four authentication methods:</p>
 	
-	<div class="grid gap-4 mt-6 md:grid-cols-3">
+	<div class="grid gap-4 mt-6 md:grid-cols-4">
 		<!-- Simple Auth -->
 		<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
 			<h3 class="font-semibold text-red-600 dark:text-red-400">Simple Auth</h3>
@@ -49,6 +49,22 @@
 					Register
 				</a>
 				<a href="/zk-login" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">
+					Login
+				</a>
+			</div>
+		</div>
+
+		<!-- Numeric ZK Auth -->
+		<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+			<h3 class="font-semibold text-blue-600 dark:text-blue-400">Numeric ZK Auth</h3>
+			<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+				Pure numeric zero-knowledge authentication
+			</p>
+			<div class="mt-3 space-x-2">
+				<a href="/numeric-zk-register" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200">
+					Register
+				</a>
+				<a href="/numeric-zk-login" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200">
 					Login
 				</a>
 			</div>

@@ -57,16 +57,34 @@ export function generateSalt(): string {
 	}
 }
 
-export async function generateCommitment(password: string, salt: string): Promise<string> {
+export function generateUserId(username: string): string {
 	try {
-		// Hash password to Field using Poseidon-style approach
-		const passwordField = hashStringToField(password);
-		const saltField = toField(BigInt(salt));
-		console.log(passwordField, saltField);
+		// Convert username to numeric ID using simple hash
+		let hash = 0n;
+		for (let i = 0; i < username.length; i++) {
+			const char = BigInt(username.charCodeAt(i));
+			hash = toField(hash * 31n + char);
+		}
+		return hash.toString();
+	} catch (error: any) {
+		throw new Error(`Failed to generate user ID: ${error.message}`);
+	}
+}
 
-		// Compute commitment = Poseidon(password, salt) using Garaga
-		const commitment = await poseidonHash(passwordField, saltField);
-		return commitment;
+export async function generateCommitment(password: string, salt: string, userId: string): Promise<string> {
+	try {
+		// Convert numeric password to Field
+		const passwordField = toField(BigInt(password));
+		const saltField = toField(BigInt(salt));
+		
+		// Layer 1: Hash password with salt
+		const passwordSaltHash = await poseidonHash(passwordField, saltField);
+		
+		// Layer 2: Hash with user_id for binding (final commitment)
+		const userIdField = toField(BigInt(userId));
+		const finalHash = await poseidonHash(BigInt(passwordSaltHash), userIdField);
+		
+		return finalHash;
 	} catch (error: any) {
 		throw new Error(`Failed to generate commitment: ${error.message}`);
 	}
@@ -88,14 +106,14 @@ function hashStringToField(str: string): bigint {
 export async function generateZkProof(
 	password: string,
 	salt: string,
-	nonce: string,
-	commitment: string
+	userId: string,
+	expectedHash: string
 ): Promise<string> {
 	try {
-		console.log('🔧 Loading circuit...');
+		console.log('🔧 Loading auth circuit...');
 
-		// Load the compiled circuit from static files
-		const response = await fetch('/password.json');
+		// Load the compiled auth circuit from static files
+		const response = await fetch('/zk.json');
 		const circuit = await response.json();
 
 		console.log('🔧 Initializing Noir and Barretenberg...');
@@ -104,37 +122,37 @@ export async function generateZkProof(
 		const noir = new Noir(circuit);
 		const backend = new UltraHonkBackend(circuit.bytecode);
 
-		console.log('📊 Preparing inputs...');
+		console.log('📊 Preparing auth circuit inputs...');
 
-		// Prepare inputs for the circuit (all as Field elements with proper reduction)
-		const passwordField = hashStringToField(password).toString();
-		const saltField = toField(BigInt(salt)).toString(); // Ensure salt is within field bounds
-		const nonceField = hashStringToField(nonce).toString(); // Convert nonce string to Field
-		const commitmentField = toField(BigInt(commitment)).toString(); // Ensure commitment is within field bounds
+		// Prepare inputs for the auth circuit (all numeric values as Field elements)
+		const passwordField = toField(BigInt(password)).toString();
+		const saltField = toField(BigInt(salt)).toString();
+		const userIdField = toField(BigInt(userId)).toString();
+		const expectedHashField = toField(BigInt(expectedHash)).toString();
 
 		const inputs = {
 			password: passwordField,
 			salt: saltField,
-			nonce: nonceField,
-			commitment: commitmentField
+			user_id: userIdField,
+			expected_hash: expectedHashField
 		};
 
-		console.log('⚡ Executing circuit...', inputs);
+		console.log('⚡ Executing auth circuit...', inputs);
 
 		// Execute the circuit to get the witness
 		const { witness } = await noir.execute(inputs);
 
-		console.log('🔐 Generating proof...');
+		console.log('🔐 Generating ZK proof...');
 
 		// Generate the proof
 		const proof = await backend.generateProof(witness);
 
-		console.log('✅ Proof generated successfully!');
+		console.log('✅ ZK Auth proof generated successfully!');
 
 		// Return the proof as a hex string
 		return Array.from(proof.proof, (byte) => byte.toString(16).padStart(2, '0')).join('');
 	} catch (error: any) {
-		console.error('❌ Failed to generate ZK proof:', error);
-		throw new Error(`ZK proof generation failed: ${error?.message || 'Unknown error'}`);
+		console.error('❌ Failed to generate ZK auth proof:', error);
+		throw new Error(`ZK auth proof generation failed: ${error?.message || 'Unknown error'}`);
 	}
 }

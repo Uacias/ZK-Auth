@@ -16,9 +16,9 @@ pub struct CliArgs {
     #[arg(long, env, default_value = "localhost:8000")]
     pub surreal_url: String,
     // DB credentials
-    #[arg(long, env, default_value = "test")]
+    #[arg(long, env, default_value = "root")]
     pub surreal_pass: String,
-    #[arg(long, env, default_value = "test")]
+    #[arg(long, env, default_value = "root")]
     pub surreal_user: String,
     #[arg(long, env, default_value = "test")]
     pub surreal_namespace: String,

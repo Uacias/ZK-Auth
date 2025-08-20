@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { zkRegister, type ZkRegisterRequest } from '$lib/utils/api';
-	import { generateSalt, generateCommitment } from '$lib/utils/zk';
+	import { generateSalt, generateCommitment, generateUserId } from '$lib/utils/zk';
 	import { addToast } from '$lib/utils/toast';
 	import Button from './Button.svelte';
 	import Input from './Input.svelte';
