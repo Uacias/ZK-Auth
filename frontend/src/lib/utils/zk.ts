@@ -71,6 +71,100 @@ export function generateUserId(username: string): string {
 	}
 }
 
+// String to Field conversion with BN254 validation
+export function stringToField(str: string): bigint {
+	try {
+		let result = 0n;
+		for (let i = 0; i < str.length; i++) {
+			result = result * 256n + BigInt(str.charCodeAt(i));
+		}
+		
+		// Check if exceeds BN254 field modulus
+		if (result >= BN254_FIELD_MODULUS) {
+			throw new Error(`String too long! Maximum supported length: ~30 characters. Your string: "${str}" (${str.length} chars)`);
+		}
+		
+		return result;
+	} catch (error: any) {
+		throw new Error(`Failed to convert string to field: ${error.message}`);
+	}
+}
+
+// String-based commitment generation
+export async function generateStringCommitment(password: string, salt: string, username: string): Promise<string> {
+	try {
+		// Convert strings to Field elements with validation
+		const passwordField = stringToField(password);
+		const saltField = toField(BigInt(salt)); // Salt is still numeric
+		const usernameField = stringToField(username);
+		
+		// Layer 1: Hash password with salt
+		const passwordSaltHash = await poseidonHash(passwordField, saltField);
+		
+		// Layer 2: Hash with username for binding (final commitment)
+		const finalHash = await poseidonHash(BigInt(passwordSaltHash), usernameField);
+		
+		return finalHash;
+	} catch (error: any) {
+		throw new Error(`Failed to generate string commitment: ${error.message}`);
+	}
+}
+
+// String-based ZK proof generation
+export async function generateStringZkProof(
+	password: string,
+	salt: string,
+	username: string,
+	expectedHash: string
+): Promise<string> {
+	try {
+		console.log('🔧 Loading auth circuit for strings...');
+
+		// Load the compiled auth circuit from static files
+		const response = await fetch('/zk.json');
+		const circuit = await response.json();
+
+		console.log('🔧 Initializing Noir and Barretenberg...');
+
+		// Initialize Noir and Barretenberg
+		const noir = new Noir(circuit);
+		const backend = new UltraHonkBackend(circuit.bytecode);
+
+		console.log('📊 Preparing string auth circuit inputs...');
+
+		// Convert strings to Field elements (with validation)
+		const passwordField = stringToField(password).toString();
+		const saltField = toField(BigInt(salt)).toString();
+		const usernameField = stringToField(username).toString();
+		const expectedHashField = toField(BigInt(expectedHash)).toString();
+
+		const inputs = {
+			password: passwordField,
+			salt: saltField,
+			user_id: usernameField,
+			expected_hash: expectedHashField
+		};
+
+		console.log('⚡ Executing string auth circuit...', inputs);
+
+		// Execute the circuit to get the witness
+		const { witness } = await noir.execute(inputs);
+
+		console.log('🔐 Generating string ZK proof...');
+
+		// Generate the proof
+		const proof = await backend.generateProof(witness);
+
+		console.log('✅ String ZK Auth proof generated successfully!');
+
+		// Return the proof as a hex string
+		return Array.from(proof.proof, (byte) => byte.toString(16).padStart(2, '0')).join('');
+	} catch (error: any) {
+		console.error('❌ Failed to generate string ZK auth proof:', error);
+		throw new Error(`String ZK auth proof generation failed: ${error?.message || 'Unknown error'}`);
+	}
+}
+
 export async function generateCommitment(password: string, salt: string, userId: string): Promise<string> {
 	try {
 		// Convert numeric password to Field
