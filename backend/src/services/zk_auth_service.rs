@@ -15,7 +15,7 @@ const NONCE_EXPIRY_MINUTES: i64 = 5;
 fn generate_nonce() -> String {
     const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let mut rng = rand::rng();
-    (0..32)
+    (0..25) // Reduced from 32 to 25 chars to fit BN254 field limit
         .map(|_| {
             let idx = rng.random_range(0..CHARSET.len());
             CHARSET[idx] as char

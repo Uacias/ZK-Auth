@@ -56,17 +56,17 @@
 			
 			// Generate commitment using string values
 			const commitment = await generateStringCommitment(password, salt, username);
-			console.log('Generated string commitment:', commitment);
+			console.log('Generated commitment:', commitment);
 
 			const registerData: ZkRegisterRequest = {
-				username, // Send actual string username to backend
+				username,
 				salt,
 				commitment
 			};
 
 			const result = await zkRegister(registerData);
 			
-			addToast(`String ZK User registered! Welcome ${result.username}`, 'success');
+			addToast(`ZK User registered! Welcome ${result.username}`, 'success');
 			dispatch('success', result);
 			
 			// Clear form
@@ -74,7 +74,7 @@
 			password = '';
 			confirmPassword = '';
 		} catch (error: any) {
-			console.error('String ZK Registration error:', error);
+			console.error('ZK Registration error:', error);
 			addToast(error.message || 'Registration failed', 'error');
 		} finally {
 			loading = false;
@@ -112,23 +112,16 @@
 	
 	<Button type="submit" variant="primary" {loading} class="w-full">
 		{#if loading}
-			Generating String ZK Commitment...
+			Generating ZK Commitment...
 		{:else}
-			Register with String ZK
+			Register with ZK
 		{/if}
 	</Button>
 </form>
 
-<div class="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-sm">
-	<h4 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">String Zero-Knowledge Registration</h4>
-	<p class="text-purple-800 dark:text-purple-200 mb-2">
-		Use actual strings for username and password - with BN254 field validation!
+<div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+	<h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Zero-Knowledge Registration</h4>
+	<p class="text-blue-800 dark:text-blue-200">
+		Your password will be used to generate a cryptographic commitment. The actual password is never sent to the server - only the commitment is stored.
 	</p>
-	<ul class="text-xs text-purple-700 dark:text-purple-300 space-y-1">
-		<li>• Username: String (max 30 chars, e.g., "alice")</li>
-		<li>• Password: String (max 30 chars, e.g., "secret123")</li>
-		<li>• Uses Poseidon hashing with multi-layer security</li>
-		<li>• Strings converted to BN254 field elements</li>
-		<li>• Password never sent to server - only commitment</li>
-	</ul>
 </div>

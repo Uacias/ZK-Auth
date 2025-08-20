@@ -90,7 +90,7 @@ export function stringToField(str: string): bigint {
 	}
 }
 
-// String-based commitment generation
+// String-based commitment generation WITH NONCE (for registration)
 export async function generateStringCommitment(password: string, salt: string, username: string): Promise<string> {
 	try {
 		// Convert strings to Field elements with validation
@@ -102,6 +102,7 @@ export async function generateStringCommitment(password: string, salt: string, u
 		const passwordSaltHash = await poseidonHash(passwordField, saltField);
 		
 		// Layer 2: Hash with username for binding (final commitment)
+		// NOTE: For registration, we don't have nonce yet - this is base commitment
 		const finalHash = await poseidonHash(BigInt(passwordSaltHash), usernameField);
 		
 		return finalHash;
@@ -110,15 +111,45 @@ export async function generateStringCommitment(password: string, salt: string, u
 	}
 }
 
-// String-based ZK proof generation
+// String-based commitment generation WITH NONCE (for login proof)
+export async function generateStringCommitmentWithNonce(
+	password: string, 
+	salt: string, 
+	username: string, 
+	nonce: string
+): Promise<string> {
+	try {
+		// Convert strings to Field elements with validation
+		const passwordField = stringToField(password);
+		const saltField = toField(BigInt(salt)); // Salt is still numeric
+		const usernameField = stringToField(username);
+		const nonceField = stringToField(nonce); // Convert nonce string to field
+		
+		// Layer 1: Hash password with salt
+		const passwordSaltHash = await poseidonHash(passwordField, saltField);
+		
+		// Layer 2: Hash with nonce (prevents proof replay attacks)
+		const nonceHash = await poseidonHash(BigInt(passwordSaltHash), nonceField);
+		
+		// Layer 3: Hash with username for binding (final commitment with nonce)
+		const finalHash = await poseidonHash(BigInt(nonceHash), usernameField);
+		
+		return finalHash;
+	} catch (error: any) {
+		throw new Error(`Failed to generate string commitment with nonce: ${error.message}`);
+	}
+}
+
+// String-based ZK proof generation WITH NONCE
 export async function generateStringZkProof(
 	password: string,
 	salt: string,
 	username: string,
+	nonce: string,
 	expectedHash: string
 ): Promise<string> {
 	try {
-		console.log('🔧 Loading auth circuit for strings...');
+		console.log('🔧 Loading auth circuit for strings with nonce...');
 
 		// Load the compiled auth circuit from static files
 		const response = await fetch('/zk.json');
@@ -130,41 +161,44 @@ export async function generateStringZkProof(
 		const noir = new Noir(circuit);
 		const backend = new UltraHonkBackend(circuit.bytecode);
 
-		console.log('📊 Preparing string auth circuit inputs...');
+		console.log('📊 Preparing string auth circuit inputs with nonce...');
 
 		// Convert strings to Field elements (with validation)
 		const passwordField = stringToField(password).toString();
 		const saltField = toField(BigInt(salt)).toString();
 		const usernameField = stringToField(username).toString();
+		const nonceField = stringToField(nonce).toString();
 		const expectedHashField = toField(BigInt(expectedHash)).toString();
 
 		const inputs = {
 			password: passwordField,
 			salt: saltField,
 			user_id: usernameField,
+			nonce: nonceField,
 			expected_hash: expectedHashField
 		};
 
-		console.log('⚡ Executing string auth circuit...', inputs);
+		console.log('⚡ Executing string auth circuit with nonce...', inputs);
 
 		// Execute the circuit to get the witness
 		const { witness } = await noir.execute(inputs);
 
-		console.log('🔐 Generating string ZK proof...');
+		console.log('🔐 Generating string ZK proof with nonce protection...');
 
 		// Generate the proof
 		const proof = await backend.generateProof(witness);
 
-		console.log('✅ String ZK Auth proof generated successfully!');
+		console.log('✅ String ZK Auth proof with nonce generated successfully!');
 
 		// Return the proof as a hex string
 		return Array.from(proof.proof, (byte) => byte.toString(16).padStart(2, '0')).join('');
 	} catch (error: any) {
-		console.error('❌ Failed to generate string ZK auth proof:', error);
+		console.error('❌ Failed to generate string ZK auth proof with nonce:', error);
 		throw new Error(`String ZK auth proof generation failed: ${error?.message || 'Unknown error'}`);
 	}
 }
 
+// Legacy numeric functions - kept for compatibility but not used in UI
 export async function generateCommitment(password: string, salt: string, userId: string): Promise<string> {
 	try {
 		// Convert numeric password to Field

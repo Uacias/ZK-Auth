@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { zkGetChallenge, zkGetSalt, zkLogin, type ZkLoginRequest } from '$lib/utils/api';
-	import { generateStringZkProof, generateStringCommitment, stringToField } from '$lib/utils/zk';
+	import { generateStringZkProof, generateStringCommitmentWithNonce, stringToField } from '$lib/utils/zk';
 	import { addToast } from '$lib/utils/toast';
 	import Button from './Button.svelte';
 	import Input from './Input.svelte';
@@ -56,13 +56,13 @@
 			const challenge = await zkGetChallenge(username);
 			console.log('Retrieved challenge:', challenge);
 			
-			// Step 3: Generate expected hash (same as during registration)
-			const expectedHash = await generateStringCommitment(password, salt, username);
-			console.log('Generated expected hash:', expectedHash);
+			// Step 3: Generate expected hash WITH NONCE (includes challenge)
+			const expectedHash = await generateStringCommitmentWithNonce(password, salt, username, challenge.nonce);
+			console.log('Generated expected hash with nonce:', expectedHash);
 			
-			// Step 4: Generate ZK proof using string auth circuit
+			// Step 4: Generate ZK proof using string auth circuit WITH NONCE
 			addToast('Generating zero-knowledge proof...', 'info');
-			const proof = await generateStringZkProof(password, salt, username, expectedHash);
+			const proof = await generateStringZkProof(password, salt, username, challenge.nonce, expectedHash);
 			console.log('Generated string proof length:', proof.length);
 			
 			currentStep = 'verifying';
@@ -77,14 +77,14 @@
 
 			const result = await zkLogin(loginData);
 			
-			addToast(`String ZK Login successful! Welcome ${result.username}`, 'success');
+			addToast(`ZK Login successful! Welcome ${result.username}`, 'success');
 			dispatch('success', result);
 			
 			// Clear form
 			username = '';
 			password = '';
 		} catch (error: any) {
-			console.error('String ZK Login error:', error);
+			console.error('ZK Login error:', error);
 			addToast(error.message || 'Login failed', 'error');
 		} finally {
 			loading = false;
@@ -95,11 +95,11 @@
 	function getButtonText() {
 		switch (currentStep) {
 			case 'generating-proof':
-				return 'Generating String ZK Proof...';
+				return 'Generating ZK Proof...';
 			case 'verifying':
 				return 'Verifying Proof...';
 			default:
-				return 'Login with String ZK';
+				return 'Login with ZK';
 		}
 	}
 </script>
@@ -130,32 +130,22 @@
 	</Button>
 </form>
 
-<div class="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-sm">
-	<h4 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">String Zero-Knowledge Login</h4>
-	<p class="text-purple-800 dark:text-purple-200 mb-2">
-		String ZK proof generation with BN254 field validation!
+<div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-sm">
+	<h4 class="font-semibold text-green-900 dark:text-green-100 mb-2">Zero-Knowledge Login</h4>
+	<p class="text-green-800 dark:text-green-200 mb-2">
+		Your password generates a zero-knowledge proof that proves you know the password without revealing it to the server.
 	</p>
 	
 	{#if currentStep !== 'credentials'}
-		<div class="mt-2 text-xs text-purple-700 dark:text-purple-300">
+		<div class="mt-2 text-xs text-green-700 dark:text-green-300">
 			<div class="flex items-center space-x-2">
-				<div class="w-2 h-2 bg-purple-500 rounded-full {currentStep === 'generating-proof' ? 'animate-pulse' : ''}"></div>
-				<span class:opacity-50={currentStep !== 'generating-proof'}>Generating string ZK proof</span>
+				<div class="w-2 h-2 bg-green-500 rounded-full {currentStep === 'generating-proof' ? 'animate-pulse' : ''}"></div>
+				<span class:opacity-50={currentStep !== 'generating-proof'}>Generating proof</span>
 			</div>
 			<div class="flex items-center space-x-2 mt-1">
-				<div class="w-2 h-2 bg-purple-500 rounded-full {currentStep === 'verifying' ? 'animate-pulse' : ''} {currentStep === 'credentials' ? 'opacity-50' : ''}"></div>
+				<div class="w-2 h-2 bg-green-500 rounded-full {currentStep === 'verifying' ? 'animate-pulse' : ''} {currentStep === 'credentials' ? 'opacity-50' : ''}"></div>
 				<span class:opacity-50={currentStep !== 'verifying'}>Verifying with server</span>
 			</div>
 		</div>
 	{/if}
-	
-	<div class="mt-3 text-xs text-purple-600 dark:text-purple-400">
-		<p class="font-medium">String → Field Conversion:</p>
-		<ul class="space-y-1 mt-1">
-			<li>• password: "{password || 'your_password'}" → stringToField() (private)</li>
-			<li>• salt: from_server (public)</li>
-			<li>• username: "{username || 'your_username'}" → stringToField() (public)</li>
-			<li>• expected_hash: computed_locally (public)</li>
-		</ul>
-	</div>
 </div>
