@@ -1,3 +1,11 @@
+# tex
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
+
+
 node_modules
 dist
 tls.*

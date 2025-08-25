@@ -1,0 +1,225 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{cmap}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage[polish]{babel}
+\geometry{a4paper}
+
+\title{Propozycja Tematu Pracy Magisterskiej: Wykorzystanie zk-Proof do Nowej Metody Autentykacji}
+\author{Filip Gumuła}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+\newpage
+\tableofcontents 
+\newpage
+
+\section{Wprowadzenie}
+Celem pracy magisterskiej jest opracowanie nowej metody autentykacji użytkowników w systemach informatycznych z wykorzystaniem zero-knowledge proofs (zk-Proof), 
+w szczególności SNARK oraz języka Noir. Tradycyjne metody autentykacji, oparte na przesyłaniu haseł lub innych danych wrażliwych do serwera, są podatne na liczne zagrożenia, 
+takie jak przechwytywanie, ataki typu phishing czy naruszenia danych. Ta praca proponuje podejście, 
+w którym użytkownik udowadnia swoją tożsamość za pomocą zk-Proof, bez konieczności ujawniania jakichkolwiek danych wrażliwych.
+
+W ramach tej pracy szczególną uwagę poświęcono wykorzystaniu Noir jako języka do definiowania i generowania dowodów SNARK oraz jego integracji z 
+Garaga do efektywnej weryfikacji proofów. Noir, jako dedykowane narzędzie dla zero-knowledge proofs, 
+umożliwia wydajne oraz intuicyjne tworzenie systemów kryptograficznych, a jego kompatybilność z SNARK 
+pozwala na skuteczne wdrożenie w praktycznych rozwiązaniach. Kluczowym celem jest zaprojektowanie oraz implementacja systemu autentykacji, 
+który może być wykorzystywany w różnych środowiskach, takich jak zdecentralizowane aplikacje (dApps), systemy logowania bez hasła czy protokoły identyfikacji cyfrowej.
+
+Podsumowując, praca ta koncentruje się na zastosowaniu SNARK w procesach autentykacji, przy jednoczesnym wykorzystaniu Noir do definiowania i generowania dowodów zk. 
+Efektem końcowym będzie działający prototyp, który umożliwi użytkownikom bezpieczne uwierzytelnianie bez konieczności przesyłania haseł
+
+\newpage
+\section{Teoretyczne Podstawy zk-Proof}
+
+\subsection{Wprowadzenie do kryptografii}
+Kryptografia to dziedzina zajmująca się metodami zabezpieczania informacji poprzez ich matematyczne przekształcenie. 
+Jej celem jest uniemożliwienie dostępu do danych osobom nieuprawnionym, przy jednoczesnym zachowaniu ich dostępności dla osób posiadających odpowiednie uprawnienia. 
+Początki kryptografii sięgają starożytności, kiedy stosowano podstawowe techniki szyfrowania oparte na zamianie lub przestawieniu znaków.
+
+Współczesna kryptografia obejmuje szeroki zakres zagadnień, w tym szyfrowanie symetryczne i asymetryczne, 
+funkcje skrótu oraz techniki bardziej zaawansowane, jak dowody wiedzy zerowej (Zero-Knowledge Proofs, zk-Proofs). 
+Stosuje się ją nie tylko do ochrony poufnych danych, ale także do zapewnienia integralności i autentyczności informacji, 
+co jest kluczowe w dzisiejszym cyfrowym świecie.
+
+\subsubsection{Kluczowe zasady kryptografii}
+Kryptografia opiera się na kilku podstawowych zasadach, które zapewniają bezpieczeństwo informacji:
+
+\begin{itemize}
+    \item \textbf{Poufność (Confidentiality)} – tylko uprawnione osoby mogą odczytać zaszyfrowane dane.
+    \item \textbf{Integralność (Integrity)} – zapewnia, że dane nie zostały zmienione lub sfałszowane w trakcie transmisji.
+    \item \textbf{Autentyczność (Authenticity)} – pozwala zweryfikować, czy nadawca wiadomości jest tym, za kogo się podaje.
+    \item \textbf{Niezaprzeczalność (Non-repudiation)} – zapobiega zaprzeczeniu przez nadawcę, że wysłał określoną wiadomość.
+\end{itemize}
+
+\subsubsection{Historia kryptografii}
+Rozwój kryptografii można podzielić na kilka głównych etapów:
+
+\begin{itemize}
+    \item \textbf{Kryptografia klasyczna} – obejmuje metody stosowane od starożytności do XX wieku. Przykładem jest szyfr Cezara, 
+    który polegał na przesunięciu każdej litery w alfabecie o ustaloną liczbę miejsc.
+    \item \textbf{Kryptografia mechaniczna} – w XX wieku rozwinięto bardziej skomplikowane systemy szyfrowania, 
+    np. Enigmę, maszynę wirnikową używaną przez armię niemiecką w czasie II wojny światowej.
+    \item \textbf{Kryptografia współczesna} – obecnie opiera się na zaawansowanych metodach matematycznych i obliczeniowych, 
+    w tym szyfrowaniu asymetrycznym oraz kryptografii postkwantowej.
+\end{itemize}
+
+\subsubsection{Kluczowe pojęcia w kryptografii}
+\paragraph{Szyfrowanie i deszyfrowanie}
+Szyfrowanie to proces przekształcania informacji w sposób, który czyni ją nieczytelną bez odpowiedniego klucza. 
+Deszyfrowanie jest odwrotnym procesem, umożliwiającym odzyskanie oryginalnej treści.
+
+Istnieją dwa główne typy szyfrowania:
+\begin{itemize}
+    \item \textbf{Szyfrowanie symetryczne} – ten sam klucz służy zarówno do szyfrowania, jak i deszyfrowania (np. algorytm AES).
+    \item \textbf{Szyfrowanie asymetryczne} – wykorzystuje parę kluczy: publiczny (do szyfrowania) i prywatny (do deszyfrowania). 
+    Przykładem jest algorytm RSA.
+\end{itemize}
+
+\paragraph{Funkcje skrótu}
+Funkcje skrótu (np. SHA-256) przekształcają dowolne dane wejściowe w ciąg znaków o ustalonej długości, 
+w sposób, który jest jednokierunkowy – tzn. nie da się łatwo odzyskać oryginalnej wartości na podstawie skrótu. 
+Są one szeroko stosowane w kryptografii, np. do weryfikacji integralności danych. 
+
+Funkcje skrótu znajdują także zastosowanie w strukturach danych takich jak \textbf{drzewa Merkle}. 
+Drzewa Merkle to hierarchiczne struktury, w których każdy węzeł jest funkcją skrótu swoich potomków. 
+Zapewniają one integralność i spójność dużych zbiorów danych, umożliwiając efektywną i bezpieczną weryfikację 
+poprawności danych w systemach rozproszonych, takich jak blockchain.
+
+\paragraph{Zero-Knowledge Proofs (zk-Proofs)}
+Jednym z bardziej zaawansowanych zastosowań kryptografii są dowody wiedzy zerowej. 
+Pozwalają one jednej stronie (proverowi) wykazać, że posiada pewną informację, bez konieczności jej ujawniania. 
+Technika ta znajduje zastosowanie m.in. w systemach prywatności blockchain i uwierzytelnianiu bez haseł.
+
+\subsubsection{Zastosowania kryptografii}
+Kryptografia znajduje zastosowanie w wielu dziedzinach technologii i bezpieczeństwa informacyjnego:
+
+\begin{itemize}
+    \item \textbf{Bezpieczna komunikacja} – np. szyfrowanie transmisji internetowej za pomocą protokołów takich jak TLS/SSL (HTTPS).
+    \item \textbf{Podpisy cyfrowe} – stosowane do zapewnienia autentyczności dokumentów elektronicznych.
+    \item \textbf{Zabezpieczenia w bankowości} – np. w systemach 3D Secure oraz EMV chipach kart płatniczych.
+    \item \textbf{Kryptografia w blockchain} – np. wykorzystanie funkcji skrótu i dowodów zk-Proofs do zapewnienia prywatności transakcji.
+    \item \textbf{Kryptografia postkwantowa} – rozwijana w celu ochrony danych przed atakami komputerów kwantowych.
+\end{itemize}
+
+% ZKS
+\subsection{Zero-Knowledge Proofs: definicje i właściwości}
+
+Dowody z wiedzą zerową (ang. \textit{Zero-Knowledge Proofs}, ZKP) to protokoły kryptograficzne, które umożliwiają jednej stronie (nazywanej \textit{dowodzącym}) 
+przekonanie innej strony (nazywanej \textit{weryfikatorem}) o prawdziwości pewnego twierdzenia, nie ujawniając przy tym żadnych dodatkowych informacji poza faktem, 
+że twierdzenie to jest prawdziwe \cite{Karbowski2015}.
+
+\subsubsection{Formalne właściwości ZKP} 
+Aby protokół mógł być uznany za dowód z wiedzą zerową, musi spełniać trzy kluczowe właściwości \cite{zkp_chainlink}:
+
+\begin{itemize}
+    \item \textbf{Kompletność (ang. \textit{Completeness})} – jeśli twierdzenie jest prawdziwe, uczciwy weryfikator zostanie przekonany przez uczciwego dowodzącego.
+    \item \textbf{Poprawność (ang. \textit{Soundness})} – jeśli twierdzenie jest fałszywe, żaden nieuczciwy dowodzący nie zdoła przekonać uczciwego weryfikatora o jego prawdziwości.
+    \item \textbf{Wiedza zerowa (ang. \textit{Zero-Knowledge})} – weryfikator nie uzyskuje żadnych informacji poza faktem, że twierdzenie jest prawdziwe.
+\end{itemize}
+
+\subsubsection{Intuicyjny przykład – Jaskinia Ali Baby}
+Jednym z najbardziej znanych przykładów ilustrujących działanie dowodów z wiedzą zerową jest tzw. \textit{Jaskinia Ali Baby} \cite{zkp_101blockchains}. W tym scenariuszu występują dwie postacie: Tina (weryfikator) oraz Sam (dowodzący). 
+
+Podczas wspólnej wyprawy odkrywają oni jaskinię, w której znajdują się dwa wejścia prowadzące do dwóch różnych ścieżek – A i B. 
+Wewnątrz znajduje się ukryte przejście zamknięte magicznymi drzwiami, które można otworzyć jedynie za pomocą tajnego hasła, znanego wyłącznie Samowi.
+
+Celem eksperymentu jest przekonanie Tiny, że Sam faktycznie zna hasło otwierające drzwi, bez konieczności jego ujawniania. 
+Aby tego dokonać, Sam wchodzi do jaskini, wybierając losową ścieżkę A lub B, natomiast Tina pozostaje na zewnątrz, nie wiedząc, którą drogą podążył. 
+Następnie Tina losowo wskazuje, którą ścieżką Sam ma powrócić. Jeśli Sam wybrał ścieżkę A, ale Tina zażądała, aby wyszedł ścieżką B, 
+jedynym sposobem na spełnienie tego warunku jest faktyczna znajomość hasła do drzwi. 
+
+Proces ten można powtórzyć wielokrotnie, aby zmniejszyć prawdopodobieństwo przypadkowego trafienia przez Sama na właściwą drogę. 
+Po dostatecznej liczbie powtórzeń Tina nabiera wysokiego stopnia pewności, że Sam rzeczywiście zna hasło, nie mając jednak dostępu do samej jego treści. 
+Ten mechanizm odzwierciedla sposób, w jaki działają dowody z wiedzą zerową w kryptografii – umożliwiają one 
+weryfikację prawdziwości twierdzenia bez ujawniania żadnych dodatkowych informacji poza faktem, że twierdzenie to jest prawdziwe \cite{zkp_101blockchains}.
+
+\paragraph{Jak przykład spełnia trzy cechy ZKP?}
+Przykład Jaskini Ali Baby doskonale ilustruje trzy podstawowe właściwości dowodów wiedzy zerowej:
+
+\begin{itemize}
+    \item \textbf{Kompletność (ang. Completeness)} – Jeśli Sam rzeczywiście zna hasło do drzwi, zawsze będzie w stanie przejść z jednej ścieżki na drugą i spełnić wymaganie Tiny. Oznacza to, że uczciwy dowodzący (Sam) zawsze przekona uczciwego weryfikatora (Tinę).
+    
+    \item \textbf{Poprawność (ang. Soundness)} – Jeśli Sam nie zna hasła, nie jest w stanie przejść na drugą stronę i wrócić zgodnie z żądaniem Tiny. Teoretycznie może próbować zgadywać, ale szansa, że za każdym razem zgadnie poprawnie, maleje wykładniczo z każdym kolejnym powtórzeniem eksperymentu. Ostatecznie fałszywy dowodzący nie będzie w stanie oszukać weryfikatora.
+    
+    \item \textbf{Wiedza zerowa (ang. Zero-Knowledge)} – W trakcie całego procesu Tina nie zdobywa żadnej dodatkowej informacji poza faktem, że Sam rzeczywiście zna hasło. Sam nie ujawnia treści hasła ani żadnych wskazówek, które mogłyby pomóc Tinie je odtworzyć.
+\end{itemize}
+
+W rzeczywistych zastosowaniach kryptograficznych ZKP działa na podobnej zasadzie, wykorzystując obliczeniowe schematy dowodzenia wiedzy 
+bez ujawniania samego sekretu. Systemy te bazują na funkcjach matematycznych i kryptograficznych obwodach logicznych, 
+w których dowodzący może wykazać znajomość pewnych wartości bez ich bezpośredniego ujawnienia \cite{zkp_chainlink}.
+
+
+\subsubsection{Rodzaje dowodów z wiedzą zerową}
+Dowody z wiedzą zerową dzielą się na dwa główne typy \cite{zkp_chainlink} \cite{zkp_nfting}:
+
+\begin{itemize}
+    \item \textbf{Interaktywne dowody z wiedzą zerową} – Interaktywne dowody wiedzy zerowej (iZKP) to protokoły kryptograficzne, w których dowodzący (prover) i weryfikator (verifier) prowadzą wymianę komunikatów, aby udowodnić znajomość pewnej informacji bez jej ujawniania. 
+    W trakcie tej interakcji weryfikator zadaje pytania, a dowodzący musi na nie odpowiedzieć, dostarczając dowód znajomości sekretnej wartości. Jednym z najczęściej stosowanych interaktywnych protokołów ZKP jest schemat Fiat-Shamira. Polega on na tym, że weryfikator generuje losową wartość, którą wysyła jako wyzwanie do dowodzącego. Dowodzący następnie musi użyć swojej sekretnej wiedzy, aby wygenerować odpowiednią odpowiedź, którą weryfikator może sprawdzić. 
+    Jeśli odpowiedź jest poprawna, weryfikator akceptuje dowód i interakcja zostaje zakończona. 
+    
+    \item \textbf{Nieinteraktywne dowody z wiedzą zerową (NIZK)} – Nieinteraktywne dowody wiedzy zerowej (niZKP) to protokoły, które nie wymagają interakcji pomiędzy dowodzącym a weryfikatorem. 
+    Zamiast tego, dowodzący generuje pojedynczy dowód, 
+    który może być zweryfikowany przez weryfikatora w dowolnym czasie, bez potrzeby dodatkowej komunikacji. 
+    Jednym z najczęściej stosowanych nieinteraktywnych protokołów ZKP jest SNARK (Succinct Non-Interactive Argument of Knowledge). 
+    SNARK wykorzystuje zaawansowane algorytmy matematyczne, aby wygenerować krótki, 
+    skondensowany dowód, który może być łatwo i szybko zweryfikowany. 
+\end{itemize}
+
+\subsubsection{Zaufany Setup \cite{trusted_setup_panther}}
+Zaufany setup (ang. Trusted Setup) to proces inicjalizacyjny, w którym generowane są klucze kryptograficzne używane w niektórych systemach dowodów zerowej wiedzy (ZKP). 
+Kluczowym celem tego procesu jest wygenerowanie zestawu parametrów, które umożliwią późniejsze tworzenie i weryfikację dowodów.
+Niektóre rodzaje ZKP, np. SNARKs, wymagają specjalnych parametrów kryptograficznych do tworzenia dowodów. Jeśli osoba lub organizacja, która generuje te parametry, zachowa ich pełną wersję, mogłaby stworzyć fałszywe dowody. 
+Z tego powodu ważne jest, aby proces generowania kluczy był przeprowadzony w sposób bezpieczny i transparentny.
+
+\paragraph{Jak działa Trusted Setup?}
+\begin{enumerate}
+    \item Wybór generatora – Proces zaczyna się od wyboru publicznych wartości matematycznych, takich jak generator grupy kryptograficznej.
+    \item Obliczanie parametrów – Tworzony jest zestaw parametrów publicznych oraz tajnych wartości, które umożliwiają generowanie dowodów.
+    \item Zniszczenie wartości tajnych – Aby system był bezpieczny, wartości tajne muszą zostać bezpowrotnie usunięte.
+\end{enumerate}
+
+Jeśli osoba lub grupa, która przeprowadziła Trusted Setup, nie zniszczy tajnych wartości, mogłaby w przyszłości wygenerować fałszywe dowody, 
+które wyglądałyby jak prawdziwe. To stanowi zagrożenie dla bezpieczeństwa systemu.
+
+\paragraph{Jak można uniknąć problemu Trusted Setup?}
+\begin{itemize}
+    \item Multi-Party Computation (MPC) – zamiast jednej osoby, setup przeprowadza wiele niezależnych uczestników, a każdy generuje tylko część parametrów. Jeśli choć jedna osoba jest uczciwa, system pozostaje bezpieczny.
+    \item Zk-STARKs zamiast zk-SNARKs – STARKs eliminują potrzebę Trusted Setup, wykorzystując inne mechanizmy matematyczne, np. funkcje mieszające zamiast krzywych eliptycznych.
+\end{itemize}
+
+
+
+
+Istnieje wiele implementacji dowodów z wiedzą zerową, z których każda ma swoje unikalne cechy, wady i zalety. Różnią się one m.in. rozmiarem dowodu, czasem generowania dowodu, czasem weryfikacji oraz wymaganym poziomem interakcji \cite{zkp_chainlink}. Do najważniejszych należą:
+
+\begin{itemize}
+    \item \textbf{zk-SNARKs} (ang. \textit{Zero-Knowledge Succinct Non-Interactive Arguments of Knowledge}) – dowody, które są niewielkich rozmiarów i łatwe do weryfikacji. Generują kryptograficzny dowód przy użyciu krzywych eliptycznych, co jest bardziej efektywne pod względem zużycia gazu w porównaniu do metod opartych na funkcjach haszujących stosowanych w STARKs. Są wykorzystywane m.in. w kryptowalutach zapewniających prywatność, takich jak Zcash.
+    
+    \item \textbf{zk-STARKs} (ang. \textit{Zero-Knowledge Scalable Transparent Arguments of Knowledge}) – eliminują potrzebę zaufanego setupu i są odporne na ataki kwantowe. STARKs wymagają minimalnej interakcji między dowodzącym a weryfikatorem, co czyni je szybszymi niż SNARKs. Dzięki temu są stosowane w skalowalnych rozwiązaniach dla blockchain, takich jak StarkNet.
+    
+    \item \textbf{PLONK} (ang. \textit{Permutations over Lagrange-bases for Oecumenical Noninteractive arguments of Knowledge}) – wykorzystuje uniwersalny zaufany setup, który może być używany z dowolnym programem i obsługiwać dużą liczbę uczestników. PLONK jest bardziej elastyczny niż SNARKs, a jego popularność rośnie w systemach zk-rollups.
+    
+    \item \textbf{Bulletproofs} – krótkie, nieinteraktywne dowody zerowej wiedzy, które nie wymagają zaufanego setupu. Zostały zaprojektowane w celu umożliwienia prywatnych transakcji w kryptowalutach. Wykorzystywane są m.in. w Monero do ukrywania wartości transakcji.
+\end{itemize}
+
+Technologie te znajdują zastosowanie w wielu projektach zero-knowledge, takich jak StarkNet, ZKsync czy Loopring, które wdrażają rozwiązania zapewniające skalowalność i prywatność w blockchain \cite{zkp_chainlink}.
+
+Dowody z wiedzą zerową mają szerokie zastosowanie w różnych obszarach kryptografii:
+
+\begin{itemize}
+    \item \textbf{Blockchain i kryptowaluty} – prywatne transakcje w Zcash (zk-SNARKs) oraz optymalizacja Layer 2 w Ethereum (zk-Rollups).
+    \item \textbf{Uwierzytelnianie bez haseł} – systemy takie jak FIDO2 mogą korzystać z ZKP do zapewnienia tożsamości użytkownika bez ujawniania haseł.
+    \item \textbf{Bezpieczne głosowanie elektroniczne} – systemy e-voting mogą wykorzystywać ZKP do weryfikacji głosów bez ujawniania ich treści.
+\end{itemize}
+
+
+\bibliographystyle{plain}  
+\bibliography{bibliografia}
+\end{document}
