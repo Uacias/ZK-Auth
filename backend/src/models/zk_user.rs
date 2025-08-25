@@ -27,7 +27,6 @@ pub struct ZkLoginPayload {
     #[validate(length(min = 3, message = "Username must be at least 3 characters long"))]
     pub username: String,
     pub proof: String,
-    pub nonce: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

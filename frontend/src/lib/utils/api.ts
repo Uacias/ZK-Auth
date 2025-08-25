@@ -41,7 +41,6 @@ export interface ZkRegisterRequest {
 export interface ZkLoginRequest {
 	username: string;
 	proof: string;
-	nonce: string;
 }
 
 export interface ZkChallengeResponse {
@@ -83,6 +82,34 @@ export async function zkGetSalt(username: string): Promise<string> {
 
 export async function zkLogin(data: ZkLoginRequest): Promise<ZkLoginResponse> {
 	return api<ZkLoginResponse>(`${API_BASE}/auth/zk/login`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+// String versions
+export interface ZkRegisterStringRequest {
+	username: string;
+	password: string;
+	salt: string;
+}
+
+export interface ZkLoginStringRequest {
+	username: string;
+	password: string;
+	salt: string;
+	proof: any;
+}
+
+export async function zkRegisterString(data: ZkRegisterStringRequest): Promise<ZkRegisterResponse> {
+	return api<ZkRegisterResponse>(`${API_BASE}/auth/zk/register_string`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+export async function zkLoginString(data: ZkLoginStringRequest): Promise<ZkLoginResponse> {
+	return api<ZkLoginResponse>(`${API_BASE}/auth/zk/login_string`, {
 		method: 'POST',
 		body: JSON.stringify(data)
 	});

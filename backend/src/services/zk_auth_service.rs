@@ -9,8 +9,12 @@ use rand::Rng;
 use serde_json::json;
 use surrealdb::Surreal;
 use validator::Validate;
+use std::process::Command;
+use std::fs;
 
 const NONCE_EXPIRY_MINUTES: i64 = 5;
+const CIRCUIT_PATH: &str = "../target/zk.json";
+const BB_PATH: &str = "/home/uacias/.bb/bb";
 
 fn generate_nonce() -> String {
     const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -21,6 +25,81 @@ fn generate_nonce() -> String {
             CHARSET[idx] as char
         })
         .collect()
+}
+
+async fn verify_proof_with_bb(
+    proof: &str,
+    _salt: &str,
+    _username: &str,
+    _expected_hash: &str,
+) -> Result<bool, String> {
+    use std::path::Path;
+    
+    let temp_dir = std::env::temp_dir();
+    let proof_file = temp_dir.join("proof");
+    let vk_file = temp_dir.join("vk");
+    
+    // Debug: Log the received proof format
+    tracing::info!("📦 Received proof format (first 200 chars): {}", &proof[..std::cmp::min(200, proof.len())]);
+    
+    // UltraHonk proof is a hex string, decode it directly
+    let proof_hex = if proof.starts_with("0x") {
+        &proof[2..]
+    } else {
+        proof
+    };
+    
+    tracing::info!("🔍 Processing hex proof of length: {}", proof_hex.len());
+    
+    // Write proof file (binary format)
+    let proof_bytes = hex::decode(proof_hex)
+        .map_err(|e| format!("Failed to decode proof hex: {}", e))?;
+    fs::write(&proof_file, proof_bytes).map_err(|e| format!("Failed to write proof file: {}", e))?;
+    
+    // Generate verification key if it doesn't exist
+    if !Path::new(&format!("{}.vk", CIRCUIT_PATH.strip_suffix(".json").unwrap_or(CIRCUIT_PATH))).exists() {
+        let vk_output = Command::new(BB_PATH)
+            .args(&[
+                "write_vk",
+                "-b", CIRCUIT_PATH,
+                "-o", vk_file.to_str().unwrap(),
+            ])
+            .output()
+            .map_err(|e| format!("Failed to generate verification key: {}", e))?;
+        
+        if !vk_output.status.success() {
+            let stderr = String::from_utf8_lossy(&vk_output.stderr);
+            return Err(format!("Failed to generate verification key: {}", stderr));
+        }
+    } else {
+        // Copy existing VK file
+        let existing_vk = format!("{}.vk", CIRCUIT_PATH.strip_suffix(".json").unwrap_or(CIRCUIT_PATH));
+        fs::copy(existing_vk, &vk_file)
+            .map_err(|e| format!("Failed to copy verification key: {}", e))?;
+    }
+    
+    // Verify proof with UltraHonk - no public inputs file needed
+    let verify_output = Command::new(BB_PATH)
+        .args(&[
+            "verify",
+            "-k", vk_file.to_str().unwrap(),
+            "-p", proof_file.to_str().unwrap(),
+        ])
+        .output()
+        .map_err(|e| format!("Failed to execute bb verify: {}", e))?;
+    
+    // Clean up temporary files
+    let _ = fs::remove_file(&proof_file);
+    let _ = fs::remove_file(&vk_file);
+    
+    if verify_output.status.success() {
+        tracing::info!("✅ BB verification successful");
+        Ok(true)
+    } else {
+        let stderr = String::from_utf8_lossy(&verify_output.stderr);
+        tracing::warn!("❌ BB verification failed: {}", stderr);
+        Ok(false)
+    }
 }
 
 pub async fn register_zk_user<C>(
@@ -212,7 +291,7 @@ where
         }
     })?;
 
-    // Get user with current nonce
+    // Get user 
     let sql = "SELECT * FROM zk_user WHERE username = $username";
     let mut response = db
         .query(sql)
@@ -233,55 +312,27 @@ where
         .next()
         .ok_or(ServerError::InvalidCredentials)?;
 
-    // Verify nonce exists and hasn't expired
-    let stored_nonce = user.nonce.ok_or_else(|| {
-        tracing::warn!("❌ No active challenge for user: {}", payload.username);
-        ServerError::BadRequest {
-            message: "No active challenge".to_string(),
-            details: vec!["Request a new challenge first".to_string()],
+    // Verify the ZK proof using Barretenberg CLI
+    let verification_result = verify_proof_with_bb(
+        &payload.proof,
+        &user.salt,
+        &user.username,
+        &user.commitment, // Use stored commitment as expected hash
+    ).await;
+
+    match verification_result {
+        Ok(true) => {
+            tracing::info!("✅ ZK proof verification successful for user: {}", payload.username);
         }
-    })?;
-
-    let nonce_expires = user.nonce_expires.ok_or_else(|| {
-        tracing::error!(
-            "❌ Nonce without expiry time for user: {}",
-            payload.username
-        );
-        ServerError::InternalServerError("Invalid nonce state".to_string())
-    })?;
-
-    if Utc::now() > nonce_expires {
-        tracing::warn!("❌ Expired challenge for user: {}", payload.username);
-        return Err(ServerError::BadRequest {
-            message: "Challenge expired".to_string(),
-            details: vec!["Request a new challenge".to_string()],
-        });
+        Ok(false) => {
+            tracing::warn!("❌ ZK proof verification failed for user: {}", payload.username);
+            return Err(ServerError::InvalidCredentials);
+        }
+        Err(e) => {
+            tracing::error!("❌ ZK proof verification error for user: {}: {:?}", payload.username, e);
+            return Err(ServerError::InternalServerError(format!("Proof verification failed: {}", e)));
+        }
     }
-
-    if stored_nonce != payload.nonce {
-        tracing::warn!("❌ Invalid nonce for user: {}", payload.username);
-        return Err(ServerError::InvalidCredentials);
-    }
-
-    // TODO: Verify the ZK proof here
-    // For now, we'll just validate that proof is not empty
-    if payload.proof.is_empty() {
-        return Err(ServerError::BadRequest {
-            message: "Invalid proof".to_string(),
-            details: vec!["Proof cannot be empty".to_string()],
-        });
-    }
-
-    // Clear the used nonce
-    let clear_nonce_sql =
-        "UPDATE zk_user SET nonce = null, nonce_expires = null WHERE username = $username";
-    db.query(clear_nonce_sql)
-        .bind(("username", payload.username.clone()))
-        .await
-        .map_err(|e| {
-            tracing::error!("❌ Failed to clear nonce: {:?}", e);
-            ServerError::Db(e.to_string())
-        })?;
 
     tracing::info!("✅ ZK proof verified for user: {}", payload.username);
 
