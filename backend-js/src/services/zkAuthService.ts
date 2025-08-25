@@ -4,16 +4,11 @@ import { readFileSync } from 'fs';
 import { init, poseidonHashBN254 } from 'garaga';
 import { 
   ZkUser, 
-  ZkRegisterPayload, 
-  ZkLoginPayload, 
-  ZkChallengeResponse, 
   ZkLoginResponse,
   ZkRegisterBigIntPayload,
   ZkLoginBigIntPayload,
   ZkRegisterStringPayload,
   ZkLoginStringPayload,
-  zkRegisterSchema,
-  zkLoginSchema,
   zkRegisterBigIntSchema,
   zkLoginBigIntSchema,
   zkRegisterStringSchema,
@@ -22,7 +17,6 @@ import {
 import { ServerError } from '../errors/ServerError';
 import { logger } from '../utils/logger';
 
-const NONCE_EXPIRY_MINUTES = 5;
 const CIRCUIT_PATH = '../target/zk.json';
 
 let garagaInitialized = false;
@@ -39,15 +33,6 @@ async function initGaraga() {
       throw new Error(`Failed to initialize Garaga: ${error.message}`);
     }
   }
-}
-
-function generateNonce(): string {
-  const CHARSET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 25; i++) { // Reduced from 32 to 25 chars to fit BN254 field limit
-    result += CHARSET.charAt(Math.floor(Math.random() * CHARSET.length));
-  }
-  return result;
 }
 
 function stringToBigInt(str: string): bigint {
@@ -156,123 +141,7 @@ async function verifyProofWithBb(
   }
 }
 
-export async function registerZkUser(db: Surreal, payload: ZkRegisterPayload): Promise<ZkUser> {
-  // Validate payload
-  const { error } = zkRegisterSchema.validate(payload);
-  if (error) {
-    const details = error.details.map(detail => detail.message);
-    logger.warn('❌ ZK Register validation error:', details);
-    throw ServerError.badRequest('Invalid input', details);
-  }
-
-  try {
-    // Check if username already exists
-    const sql = 'SELECT * FROM zk_user WHERE username = $username';
-    const response = await db.query(sql, { username: payload.username });
-
-    if (response && Array.isArray(response) && response.length > 0) {
-      const existingUsers = response[0];
-      if (existingUsers && Array.isArray(existingUsers) && existingUsers.length > 0) {
-        throw ServerError.badRequest('Username already exists', ['Choose a different username']);
-      }
-    }
-
-    const now = new Date();
-    const created = await db.create('zk_user', {
-      username: payload.username,
-      salt: payload.salt,
-      commitment: payload.commitment,
-      nonce: null,
-      nonce_expires: null,
-      created_at: now,
-    });
-
-    if (!created || (Array.isArray(created) && created.length === 0)) {
-      throw ServerError.noRecordCreated();
-    }
-
-    const user = Array.isArray(created) ? created[0] : created;
-    return user as unknown as ZkUser;
-  } catch (error) {
-    if (error instanceof ServerError) {
-      throw error;
-    }
-    logger.error('❌ Failed to create ZK user:', error);
-    throw ServerError.db(String(error));
-  }
-}
-
-export async function getUserSalt(db: Surreal, username: string): Promise<string> {
-  try {
-    const sql = 'SELECT salt FROM zk_user WHERE username = $username LIMIT 1';
-    const response = await db.query(sql, { username });
-
-    if (!response || !Array.isArray(response) || response.length === 0) {
-      throw ServerError.badRequest('User not found', ['Username does not exist']);
-    }
-
-    const results = response[0];
-    if (!results || !Array.isArray(results) || results.length === 0) {
-      throw ServerError.badRequest('User not found', ['Username does not exist']);
-    }
-
-    const result = results[0] as any;
-    if (!result || !result.salt) {
-      throw ServerError.internalServerError('Salt field not found');
-    }
-
-    logger.info(`✅ Retrieved salt for user: ${username}`);
-    return result.salt;
-  } catch (error) {
-    if (error instanceof ServerError) {
-      throw error;
-    }
-    logger.error('❌ DB query error:', error);
-    throw ServerError.db(String(error));
-  }
-}
-
-export async function getChallenge(db: Surreal, username: string): Promise<ZkChallengeResponse> {
-  try {
-    // Check if user exists
-    const sql = 'SELECT * FROM zk_user WHERE username = $username';
-    const response = await db.query(sql, { username });
-
-    if (!response || !Array.isArray(response) || response.length === 0) {
-      throw ServerError.badRequest('User not found', ['Username does not exist']);
-    }
-
-    const users = response[0];
-    if (!users || !Array.isArray(users) || users.length === 0) {
-      throw ServerError.badRequest('User not found', ['Username does not exist']);
-    }
-
-    // Generate new nonce
-    const nonce = generateNonce();
-    const expiresAt = new Date(Date.now() + NONCE_EXPIRY_MINUTES * 60 * 1000);
-
-    // Update user with new nonce
-    const updateSql = 'UPDATE zk_user SET nonce = $nonce, nonce_expires = $expires WHERE username = $username';
-    await db.query(updateSql, {
-      nonce,
-      expires: expiresAt,
-      username,
-    });
-
-    logger.info(`🔑 Generated challenge for user: ${username}`);
-
-    return {
-      nonce,
-      expires_at: expiresAt,
-    };
-  } catch (error) {
-    if (error instanceof ServerError) {
-      throw error;
-    }
-    logger.error('❌ DB query error:', error);
-    throw ServerError.db(String(error));
-  }
-}
+// Removed unused functions: registerZkUser, getUserSalt, getChallenge
 
 // BigInt version of register
 export async function registerZkUserBigInt(db: Surreal, payload: ZkRegisterBigIntPayload): Promise<ZkUser> {
@@ -382,65 +251,7 @@ export async function verifyZkProofBigInt(db: Surreal, payload: ZkLoginBigIntPay
   }
 }
 
-export async function verifyZkProof(db: Surreal, payload: ZkLoginPayload): Promise<ZkLoginResponse> {
-  // Validate payload
-  const { error } = zkLoginSchema.validate(payload);
-  if (error) {
-    const details = error.details.map(detail => detail.message);
-    logger.warn('❌ ZK Login validation error:', details);
-    throw ServerError.badRequest('Invalid input', details);
-  }
-
-  try {
-    // Get user
-    const sql = 'SELECT * FROM zk_user WHERE username = $username';
-    const response = await db.query(sql, { username: payload.username });
-
-    if (!response || !Array.isArray(response) || response.length === 0) {
-      throw ServerError.invalidCredentials();
-    }
-
-    const users = response[0];
-    if (!users || !Array.isArray(users) || users.length === 0) {
-      throw ServerError.invalidCredentials();
-    }
-
-    const user = users[0] as unknown as ZkUser;
-
-    // Verify the ZK proof using Barretenberg CLI
-    try {
-      const isValid = await verifyProofWithBb(
-        payload.proof,
-        user.salt,    // salt as BigInt string
-        user.username, // username as BigInt string  
-        user.commitment // commitment as BigInt string
-      );
-
-      if (!isValid) {
-        logger.warn(`❌ ZK proof verification failed for user: ${payload.username}`);
-        throw ServerError.invalidCredentials();
-      }
-
-      logger.info(`✅ ZK proof verification successful for user: ${payload.username}`);
-    } catch (error) {
-      logger.error(`❌ ZK proof verification error for user: ${payload.username}:`, error);
-      throw ServerError.internalServerError(`Proof verification failed: ${error}`);
-    }
-
-    logger.info(`✅ ZK proof verified for user: ${payload.username}`);
-
-    return {
-      id: user.id || '',
-      username: user.username,
-    };
-  } catch (error) {
-    if (error instanceof ServerError) {
-      throw error;
-    }
-    logger.error('❌ DB query error:', error);
-    throw ServerError.db(String(error));
-  }
-}
+// Removed unused function: verifyZkProof
 
 // String versions - convert to BigInt internally
 export async function registerZkUserString(db: Surreal, payload: ZkRegisterStringPayload): Promise<ZkUser> {

@@ -31,21 +31,79 @@ export async function api<T>(endpoint: string, options?: RequestInit): Promise<T
 	return data;
 }
 
-// ZK Authentication API functions
-export interface ZkRegisterRequest {
+// Base interfaces
+export interface User {
+	id?: string;
+	username: string;
+	password?: string;
+	created_at?: string;
+}
+
+export interface RegisterPayload {
+	username: string;
+	password: string;
+}
+
+export interface LoginPayload {
+	username: string;
+	password: string;
+}
+
+export interface LoginResponse {
+	id: string;
+	username: string;
+}
+
+const API_BASE = 'http://localhost:8080';
+
+// Simple Auth API
+export async function register(data: RegisterPayload): Promise<User> {
+	return api<User>(`${API_BASE}/auth/register`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+export async function login(data: LoginPayload): Promise<LoginResponse> {
+	return api<LoginResponse>(`${API_BASE}/auth/login`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+// Hash Auth API
+export async function registerHashed(data: RegisterPayload): Promise<User> {
+	return api<User>(`${API_BASE}/auth/register_hashed`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+export async function loginHashed(data: LoginPayload): Promise<LoginResponse> {
+	return api<LoginResponse>(`${API_BASE}/auth/login_hashed`, {
+		method: 'POST',
+		body: JSON.stringify(data)
+	});
+}
+
+// ZK Auth API - BigInt version
+export interface ZkRegisterBigIntRequest {
+	usernameBigInt: string;
+	saltBigInt: string;
+	commitmentBigInt: string;
+}
+
+export interface ZkLoginBigIntRequest {
+	usernameBigInt: string;
+	proof: any;
+}
+
+export interface ZkRegisterResponse {
+	id: string;
 	username: string;
 	salt: string;
 	commitment: string;
-}
-
-export interface ZkLoginRequest {
-	username: string;
-	proof: string;
-}
-
-export interface ZkChallengeResponse {
-	nonce: string;
-	expires_at: string;
+	created_at: string;
 }
 
 export interface ZkLoginResponse {
@@ -53,41 +111,21 @@ export interface ZkLoginResponse {
 	username: string;
 }
 
-export interface ZkUser {
-	id?: string;
-	username: string;
-	salt: string;
-	commitment: string;
-	nonce?: string;
-	nonce_expires?: string;
-	created_at: string;
-}
-
-const API_BASE = 'http://localhost:8080';
-
-export async function zkRegister(data: ZkRegisterRequest): Promise<ZkUser> {
-	return api<ZkUser>(`${API_BASE}/auth/zk/register`, {
+export async function zkRegisterBigInt(data: ZkRegisterBigIntRequest): Promise<ZkRegisterResponse> {
+	return api<ZkRegisterResponse>(`${API_BASE}/auth/zk/register_bigint`, {
 		method: 'POST',
 		body: JSON.stringify(data)
 	});
 }
 
-export async function zkGetChallenge(username: string): Promise<ZkChallengeResponse> {
-	return api<ZkChallengeResponse>(`${API_BASE}/auth/zk/challenge/${username}`);
-}
-
-export async function zkGetSalt(username: string): Promise<string> {
-	return api<string>(`${API_BASE}/auth/zk/salt/${username}`);
-}
-
-export async function zkLogin(data: ZkLoginRequest): Promise<ZkLoginResponse> {
-	return api<ZkLoginResponse>(`${API_BASE}/auth/zk/login`, {
+export async function zkLoginBigInt(data: ZkLoginBigIntRequest): Promise<ZkLoginResponse> {
+	return api<ZkLoginResponse>(`${API_BASE}/auth/zk/login_bigint`, {
 		method: 'POST',
 		body: JSON.stringify(data)
 	});
 }
 
-// String versions
+// ZK Auth API - String version
 export interface ZkRegisterStringRequest {
 	username: string;
 	password: string;

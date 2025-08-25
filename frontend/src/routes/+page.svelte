@@ -44,13 +44,17 @@
 			<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
 				Zero-knowledge proof authentication
 			</p>
-			<div class="mt-3 space-x-2">
-				<a href="/string-zk-register" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">
-					Register
-				</a>
-				<a href="/string-zk-login" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">
-					Login
-				</a>
+			<div class="mt-3 space-y-1">
+				<div class="space-x-2">
+					<a href="/bigint-zk-auth" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">
+						BigInt ZK Auth
+					</a>
+				</div>
+				<div class="space-x-2">
+					<a href="/string-zk-auth" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded hover:bg-green-200">
+						String ZK Auth
+					</a>
+				</div>
 			</div>
 		</div>
 	</div>
