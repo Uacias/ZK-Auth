@@ -1,12 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { Surreal } from 'surrealdb';
 import { RegisterPayload, LoginPayload } from '../models/user';
-import { ZkRegisterBigIntPayload, ZkLoginBigIntPayload, ZkRegisterStringPayload, ZkLoginStringPayload } from '../models/zkUser';
+import { ZkRegisterStringPayload, ZkLoginStringPayload } from '../models/zkUser';
 import { registerUser, loginUser } from '../services/authService';
 import { registerUserHashed, loginUserHashed } from '../services/authHashingService';
 import { 
-  registerZkUserBigInt,
-  verifyZkProofBigInt,
   registerZkUserString,
   verifyZkProofString
 } from '../services/zkAuthService';
@@ -94,38 +92,6 @@ router.post('/login_hashed', requireDb, async (req: Request, res: Response) => {
   }
 });
 
-// BigInt ZK auth routes (working version)
-router.post('/zk/register_bigint', requireDb, async (req: Request, res: Response) => {
-  try {
-    const authReq = req as AuthenticatedRequest;
-    const payload: ZkRegisterBigIntPayload = req.body;
-    const user = await registerZkUserBigInt(authReq.db, payload);
-    res.json(user);
-  } catch (error) {
-    if (error instanceof ServerError) {
-      res.status(error.statusCode).json(error.toJSON());
-    } else {
-      logger.error('Unexpected error in /zk/register_bigint:', error);
-      res.status(500).json(ServerError.internalServerError(String(error)).toJSON());
-    }
-  }
-});
-
-router.post('/zk/login_bigint', requireDb, async (req: Request, res: Response) => {
-  try {
-    const authReq = req as AuthenticatedRequest;
-    const payload: ZkLoginBigIntPayload = req.body;
-    const result = await verifyZkProofBigInt(authReq.db, payload);
-    res.json(result);
-  } catch (error) {
-    if (error instanceof ServerError) {
-      res.status(error.statusCode).json(error.toJSON());
-    } else {
-      logger.error('Unexpected error in /zk/login_bigint:', error);
-      res.status(500).json(ServerError.internalServerError(String(error)).toJSON());
-    }
-  }
-});
 
 // String ZK auth routes (working version) 
 router.post('/zk/register_string', requireDb, async (req: Request, res: Response) => {

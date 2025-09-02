@@ -43,13 +43,10 @@
 						Login
 					</a>
 					
-					<!-- ZK Auth (Working Versions) -->
+					<!-- ZK Auth -->
 					<div class="px-4 py-1 mt-2 text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">ZK Auth</div>
-					<a href="/bigint-zk-auth" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-900/20 {currentPath === '/bigint-zk-auth' ? 'bg-green-50 dark:bg-green-900/20' : ''}">
-						BigInt ZK Auth
-					</a>
 					<a href="/string-zk-auth" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-900/20 {currentPath === '/string-zk-auth' ? 'bg-green-50 dark:bg-green-900/20' : ''}">
-						String ZK Auth
+						Zero-Knowledge Auth
 					</a>
 				</div>
 			</div>

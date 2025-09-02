@@ -225,23 +225,17 @@
 	<title>String ZK Auth - ZK-Auth</title>
 </svelte:head>
 
-<div class="container mx-auto max-w-2xl px-4 py-8">
-	<Card>
-		<div class="text-center mb-6">
-			<h1 class="text-3xl font-bold text-primary mb-2">🔐 String ZK Auth</h1>
-			<p class="text-secondary">
-				Registration and login with string inputs (converted to BigInt on backend)
-			</p>
-		</div>
-
-		<div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-			<h3 class="font-semibold text-green-800 dark:text-green-200 mb-2">How it works:</h3>
+<div class="content">
+	<h2 class="text-primary mb-4 text-2xl font-bold">🔐 Zero-Knowledge Auth</h2>
+	
+	<Card title={mode === 'register' ? 'Create Account' : 'Login'} class_="max-w-lg mx-auto">
+		<div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-6">
+			<h4 class="font-semibold text-green-800 dark:text-green-200 mb-2">Zero-Knowledge Proof</h4>
 			<ul class="text-green-700 dark:text-green-300 text-sm space-y-1">
-				<li>• Enter string inputs (username, password, salt)</li>
-				<li>• Backend converts to BigInt values automatically</li>
-				<li>• Register: stores converted values in database</li>
-				<li>• Login: generates ZK proof using Poseidon hash</li>
-				<li>• Simple string-to-BigInt conversion for ease of use</li>
+				<li>• Server never sees your password</li>
+				<li>• Cryptographic proof using SNARK</li>
+				<li>• Poseidon hash & UltraHonk protocol</li>
+				<li>• Maximum privacy and security</li>
 			</ul>
 		</div>
 
@@ -265,32 +259,24 @@
 			</div>
 		</div>
 
-		<!-- Form -->
-		<div class="space-y-4">
-			<h3 class="text-lg font-semibold text-primary">
-				{mode === 'register' ? 'Create Account' : 'Login'}
-			</h3>
-			
+		<form class="flex flex-col gap-3">
 			<Input
-				label="Username"
 				bind:value={username}
-				placeholder="Enter username (max 15 chars)"
+				placeholder="Username (max 15 chars)"
 				maxlength="15"
 				disabled={loading}
 			/>
 
 			<Input
-				label="Password"
 				type="password"
 				bind:value={password}
-				placeholder="Enter password (max 15 chars)"
+				placeholder="Password (max 15 chars)"
 				maxlength="15"
 				disabled={loading}
 			/>
 
 			<div class="flex gap-2">
 				<Input
-					label="Salt"
 					bind:value={salt}
 					placeholder="Salt (auto-generated)"
 					maxlength="15"
@@ -301,9 +287,9 @@
 					type="button" 
 					onclick={handleGenerateSalt}
 					disabled={loading}
-					class_="mt-6"
+					class_="px-3 self-end"
 				>
-					{#snippet children()}Generate{/snippet}
+					{#snippet children()}Gen{/snippet}
 				</Button>
 			</div>
 
@@ -311,27 +297,31 @@
 				type="button" 
 				onclick={mode === 'register' ? handleRegister : handleLogin}
 				disabled={loading || !username || !password}
-				class_="w-full"
+				variant="primary"
+				class_="mt-2"
 			>
 				{#snippet children()}
 					{#if loading}
-						{mode === 'register' ? 'Registering...' : 'Logging in...'}
+						{mode === 'register' ? 'Registering...' : 'Generating proof...'}
 					{:else}
 						{mode === 'register' ? 'Register' : 'Login'}
 					{/if}
 				{/snippet}
 			</Button>
-		</div>
+		</form>
 
 		<div class="mt-6 text-center">
-			<a href="/" class="text-secondary hover:text-primary underline">← Back to Home</a>
+			<p class="text-xs text-secondary mb-2">
+				Other authentication methods:
+			</p>
+			<div class="flex justify-center space-x-4">
+				<a href="/simple-register" class="text-xs text-primary hover:underline">
+					Simple Auth
+				</a>
+				<a href="/hash-register" class="text-xs text-primary hover:underline">
+					Hash Auth
+				</a>
+			</div>
 		</div>
 	</Card>
 </div>
-
-<style>
-	.container {
-		min-height: calc(100vh - 4rem);
-		padding-top: 2rem;
-	}
-</style>

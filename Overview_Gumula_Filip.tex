@@ -6,6 +6,8 @@
 \usepackage{graphicx}
 \usepackage{geometry}
 \usepackage[polish]{babel}
+\usepackage{xcolor}
+\usepackage{colortbl}
 \geometry{a4paper}
 
 \title{Propozycja Tematu Pracy Magisterskiej: Wykorzystanie zk-Proof do Nowej Metody Autentykacji}
@@ -219,6 +221,272 @@ Dowody z wiedzą zerową mają szerokie zastosowanie w różnych obszarach krypt
     \item \textbf{Bezpieczne głosowanie elektroniczne} – systemy e-voting mogą wykorzystywać ZKP do weryfikacji głosów bez ujawniania ich treści.
 \end{itemize}
 
+\newpage
+\section{Projektowanie i implementacja systemu uwierzytelniania - analiza porównawcza}
+
+\subsection{Założenia projektowe i wymagania systemu}
+
+W ramach niniejszej pracy opracowano demonstracyjny system uwierzytelniania, który implementuje trzy różne podejścia do weryfikacji tożsamości użytkowników. Głównym celem było praktyczne porównanie tradycyjnych metod uwierzytelniania z nowatorskim podejściem wykorzystującym dowody wiedzy zerowej.
+
+\subsubsection{Wymagania funkcjonalne}
+System został zaprojektowany z myślą o realizacji następujących funkcjonalności:
+\begin{itemize}
+    \item \textbf{Rejestracja użytkowników} – możliwość tworzenia nowych kont z wyborem metody uwierzytelniania
+    \item \textbf{Logowanie} – weryfikacja tożsamości użytkowników przy użyciu wybranej metody
+    \item \textbf{Bezpieczne przechowywanie danych} – odpowiednie zabezpieczenie informacji uwierzytelniających
+    \item \textbf{Porównanie metod} – umożliwienie testowania różnych podejść w jednym środowisku
+\end{itemize}
+
+\subsubsection{Wymagania niefunkcjonalne}
+Podczas projektowania systemu uwzględniono następujące aspekty:
+\begin{itemize}
+    \item \textbf{Performance} – akceptowalny czas odpowiedzi dla użytkownika końcowego
+    \item \textbf{Usability} – intuicyjny interfejs użytkownika niezależnie od wybranej metody
+    \item \textbf{Skalowalność} – możliwość obsługi wielu użytkowników jednocześnie
+    \item \textbf{Bezpieczeństwo} – odpowiedni poziom ochrony dla każdej zaimplementowanej metody
+\end{itemize}
+
+\subsubsection{Architektura systemu}
+System został zbudowany w architekturze klient-serwer z następującymi komponentami:
+\begin{itemize}
+    \item \textbf{Frontend} – aplikacja webowa napisana w Svelte, odpowiedzialna za interfejs użytkownika i generowanie dowodów kryptograficznych
+    \item \textbf{Backend} – serwer Express.js w TypeScript, obsługujący logikę biznesową i weryfikację uwierzytelnień
+    \item \textbf{Baza danych} – SurrealDB do przechowywania danych użytkowników i uwierzytelnień
+\end{itemize}
+
+[PLACEHOLDER: Screenshot - Strona główna aplikacji pokazująca wybór trzech metod uwierzytelniania]
+
+\subsection{Metoda 1: Proste uwierzytelnianie tekstowe}
+
+Pierwsza zaimplementowana metoda reprezentuje najbardziej elementarne i niewyrafinowane podejście do uwierzytelniania użytkowników, w którym hasła są przechowywane oraz weryfikowane w postaci jawnego, nieprzetworzonego tekstu. Ta metoda została świadomie zaprojektowana jako punkt odniesienia dla bardziej zaawansowanych rozwiązań, demonstrując jednocześnie fundamentalne problemy bezpieczeństwa związane z nieodpowiednim zarządzaniem danymi uwierzytelniającymi.
+
+\subsubsection{Opis implementacji}
+Architektura tej metody opiera się na niezwykle uproszczonym modelu przepływu danych, gdzie proces rejestracji nowego użytkownika sprowadza się do bezpośredniego, nieprzetworzonego zapisania podanego przez użytkownika hasła w strukturze bazy danych. Mechanizm ten charakteryzuje się całkowitym brakiem jakiejkolwiek transformacji kryptograficznej wprowadzanych danych, co oznacza, że hasło użytkownika zostaje zmagazynowane w identycznej postaci, w jakiej zostało wprowadzone przez użytkownika w interfejsie aplikacji.
+
+Podczas procesu uwierzytelniania, system realizuje weryfikację tożsamości poprzez przeprowadzenie elementarnego porównania tekstowego pomiędzy hasłem wprowadzonym przez użytkownika a wartością przechowywaną w bazie danych. Ten proces weryfikacji nie wymaga żadnych operacji dekryptograficznych czy porównań hashowanych wartości, ponieważ wykorzystuje bezpośrednie porównanie ciągów znaków na poziomie aplikacji.
+
+Warstwa serwerowa aplikacji eksponuje dwa fundamentalne endpointy RESTful API, które obsługują podstawowe operacje związane z zarządzaniem kontami użytkowników. Endpoint rejestracyjny przyjmuje dane użytkownika w formacie JSON, przeprowadza podstawową walidację poprawności formatowania wprowadzonych danych, a następnie zapisuje je bezpośrednio w bazie danych bez jakiejkolwiek obróbki kryptograficznej. Z kolei endpoint logowania porównuje otrzymane dane uwierzytelniające z zapisanymi wartościami, zwracając stosowną odpowiedź o powodzeniu lub niepowodzeniu procesu uwierzytelniania.
+
+Należy podkreślić, że system ten został zaprojektowany wyłącznie w celach demonstracyjnych i edukacyjnych, służąc jako negatywny przykład implementacji uwierzytelniania. Metoda ta świadomie pomija wszelkie mechanizmy szyfrowania, hashowania czy inne zabezpieczenia kryptograficzne, co czyni ją całkowicie nieadekwatną do wykorzystania w jakimkolwiek środowisku produkcyjnym czy komercyjnym.
+
+[PLACEHOLDER: Screenshot - Formularz prostej rejestracji i logowania]
+
+\subsubsection{Zalety prostego uwierzytelniania}
+\begin{itemize}
+    \item \textbf{Maksymalna prostota implementacji} – wymaga minimalnej ilości kodu i logiki
+    \item \textbf{Zero narzutów obliczeniowych} – proces weryfikacji jest natychmiastowy
+    \item \textbf{Brak dodatkowych zależności} – nie wymaga zewnętrznych bibliotek kryptograficznych
+    \item \textbf{Łatwość debugowania} – wszystkie operacje są transparentne i łatwe do śledzenia
+\end{itemize}
+
+\subsubsection{Wady prostego uwierzytelniania}
+\begin{itemize}
+    \item \textbf{Całkowity brak bezpieczeństwa} – hasła przechowywane w postaci jawnego tekstu
+    \item \textbf{Podatność na wszystkie typy ataków} – man-in-the-middle, przejęcie bazy danych, shoulder surfing
+    \item \textbf{Naruszenie standardów bezpieczeństwa} – sprzeczność z podstawowymi zasadami security by design
+    \item \textbf{Problemy compliance} – niezgodność z regulacjami typu GDPR, SOX
+    \item \textbf{Brak możliwości audytu} – niemożność śledzenia nieautoryzowanych dostępów
+\end{itemize}
+
+\subsection{Metoda 2: Uwierzytelnianie z hashowaniem (Argon2)}
+
+Druga metoda implementacyjna reprezentuje nowoczesny, przemyślany standard w dziedzinie bezpiecznego przechowywania oraz zarządzania hasłami użytkowników, wykorzystując zaawansowany algorytm hashowania Argon2 w połączeniu z techniką solenia kryptograficznego. To podejście stanowi znaczący krok naprzód w porównaniu z pierwszą metodą, wprowadzając fundamentalne mechanizmy bezpieczeństwa, które są powszechnie akceptowane i rekomendowane przez współczesne standardy cyberbezpieczeństwa.
+
+\subsubsection{Opis implementacji}
+Serce tej implementacji stanowi wysoce zaawansowana biblioteka Argon2, która została zaprojektowana specjalnie do generowania kryptograficznie bezpiecznych skrótów haseł podczas procesu rejestracji użytkowników. Argon2, będący zwycięzcą konkursu Password Hashing Competition, reprezentuje państwo sztuki w dziedzinie funkcji wyprowadzania kluczy, oferując niezrównaną odporność na współczesne zagrożenia kryptograficzne.
+
+Proces transformacji hasła rozpoczyna się od generowania unikalnej, kryptograficznie silnej soli dla każdego indywidualnego użytkownika. Ta sól, będąca losową sekwencją bajtów o wysokiej entropii, zostaje następnie połączona z hasłem użytkownika w procesie hashowania, zapewniając tym samym, że nawet identyczne hasła różnych użytkowników generują całkowicie odmienne, niepowiązane ze sobą skróty kryptograficzne. Mechanizm ten skutecznie eliminuje możliwość wykorzystania ataków opartych na prekompilowanych tabelach tęczowych (rainbow tables).
+
+Kluczowe komponenty architektoniczne tej implementacji obejmują szereg wyrafinowanych mechanizmów bezpieczeństwa. Generator soli kryptograficznej wykorzystuje wysokiej jakości źródła entropii systemu operacyjnego, tworząc dla każdego użytkownika unikalny, nieprzewidywalny identyfikator kryptograficzny o odpowiedniej długości. Mechanizm hashowania Argon2 został skonfigurowany z parametrami zapewniającymi odporność na ataki realizowane przy użyciu specjalistycznego sprzętu obliczeniowego, takiego jak procesory graficzne GPU czy dedykowane układy scalone ASIC.
+
+Proces weryfikacji uwierzytelniania opiera się na sofistykowanym algorytmie porównania skrótów kryptograficznych, który pobiera hasło wprowadzone przez użytkownika, poddaje je identycznemu procesowi hashowania z wykorzystaniem oryginalnej soli, a następnie przeprowadza bezpieczne porównanie otrzymanego skrótu z wartością przechowywaną w bazie danych. System oferuje również możliwość konfiguracji parametrów kosztowych algorytmu, pozwalając na dostrojenie czasu wykonania operacji hashowania w zależności od wymagań bezpieczeństwa oraz dostępnych zasobów obliczeniowych.
+
+[PLACEHOLDER: Screenshot - Formularz rejestracji z hashowaniem, być może pokazujący loading podczas hashowania]
+
+\subsubsection{Zalety hashowania Argon2}
+\begin{itemize}
+    \item \textbf{Branżowy standard} – powszechnie akceptowana metoda w systemach produkcyjnych
+    \item \textbf{Ochrona przed atakami rainbow table} – unikalne sole uniemożliwiają użycie prekompilowanych tablic
+    \item \textbf{Odporność na ataki brute-force} – konfigurowalny koszt obliczeniowy spowalnia ataki
+    \item \textbf{Dojrzała technologia} – dostępność bibliotek i narzędzi we wszystkich językach programowania
+    \item \textbf{Compliance} – zgodność z wymaganiami bezpieczeństwa i regulacjami prawnymi
+\end{itemize}
+
+\subsubsection{Wady hashowania Argon2}
+\begin{itemize}
+    \item \textbf{Serwer nadal "zna" metodę weryfikacji} – pomimo hashowania, serwer posiada wszystkie dane potrzebne do weryfikacji hasła
+    \item \textbf{Podatność na kompromitację serwera} – przejęcie bazy danych nadal stanowi zagrożenie
+    \item \textbf{Scentralizowany model zaufania} – użytkownicy muszą zaufać, że serwer prawidłowo implementuje zabezpieczenia
+    \item \textbf{Możliwość ataków offline} – po przejęciu hashów atakujący może przeprowadzać ataki bez ograniczeń czasowych
+    \item \textbf{Ryzyko implementacyjne} – błędy w konfiguracji lub implementacji mogą osłabić bezpieczeństwo
+\end{itemize}
+
+[PLACEHOLDER: Screenshot - Porównanie czasów logowania dla różnych metod, możliwe wykresy]
+
+\subsection{Metoda 3: Zero-Knowledge Authentication}
+
+Trzecia i najbardziej wyrafinowana metoda implementacyjna stanowi prawdziwy przełom w dziedzinie uwierzytelniania użytkowników, wykorzystując zaawansowane dowody wiedzy zerowej (zero-knowledge proofs) do stworzenia systemu, w którym serwer może matematycznie zweryfikować autentyczność znajomości hasła przez użytkownika, nie uzyskując przy tym jakiejkolwiek informacji o samym haśle czy sposobie jego weryfikacji. Ta rewolucyjna technologia reprezentuje fundamentalną zmianę paradygmatu w podejściu do bezpieczeństwa systemów uwierzytelniania, eliminując tradycyjny model zaufania oparty na centralnym serwerze przechowującym dane uwierzytelniające.
+
+\subsubsection{Opis implementacji}
+Architektura systemu opiera się na starannie dobranym stosie technologicznym, który łączy najnowocześniejsze narzędzia i biblioteki kryptograficzne w spójną całość zdolną do realizacji dowodów wiedzy zerowej w środowisku przeglądarki internetowej. Każdy komponent tego ekosystemu pełni specjalizowaną funkcję w procesie generowania i weryfikacji dowodów kryptograficznych.
+
+Fundamentem systemu jest Noir.js - nowoczesny, ekspresyjny język specjalistyczny przeznaczony do definiowania oraz implementacji obwodów kryptograficznych i generowania dowodów SNARK (Succinct Non-Interactive Arguments of Knowledge). Noir wyróżnia się intuicyjną składnią przypominającą języki wysokiego poziomu, jednocześnie oferując pełną kontrolę nad generowanymi obwodami kryptograficznymi. Język ten umożliwia programistom definiowanie złożonych relacji matematycznych i logicznych, które następnie są kompilowane do wydajnych reprezentacji algebraicznych zdolnych do weryfikacji w systemach zero-knowledge.
+
+Kluczową rolę w zapewnieniu spójności obliczeniowej między warstwą kliencką a serwerową pełni biblioteka Garaga, która dostarcza zaawansowaną implementację funkcji skrótu Poseidon. Ta kryptograficznie bezpieczna funkcja hashująca została specjalnie zaprojektowana do wykorzystania w systemach zero-knowledge, charakteryzując się optymalną wydajnością w środowisku obwodów algebraicznych. Garaga zapewnia identyczność obliczeniową funkcji Poseidon po obu stronach systemu - zarówno w środowisku JavaScript przeglądarki, jak i w serwerowym środowisku Node.js, co stanowi warunek konieczny dla poprawności generowanych i weryfikowanych dowodów.
+
+System weryfikacji dowodów SNARK realizuje UltraHonk - zaawansowany protokół kryptograficzny należący do rodziny uniwersalnych systemów dowodzenia. UltraHonk charakteryzuje się szczególnie efektywną weryfikacją dowodów przy zachowaniu silnych gwarancji bezpieczeństwa, co czyni go idealnym wyborem dla aplikacji wymagających szybkiej weryfikacji dużej liczby dowodów. Protokół ten wykorzystuje nowoczesne techniki kryptograficzne oparte na krzywych eliptycznych, zapewniając jednocześnie kompaktowe rozmiary dowodów i wydajną weryfikację.
+
+Całość infrastruktury kryptograficznej jest wspierana przez bibliotekę Barretenberg (BB.js), która stanowi kompleksowe narzędzie do obsługi wszystkich aspektów dowodów zero-knowledge w środowisku JavaScript. Barretenberg dostarcza niskopoziomowe implementacje algorytmów kryptograficznych, zarządzanie pamięcią obwodów algebraicznych, optymalizacje wydajnościowe oraz interfejsy do komunikacji z modułami WebAssembly zawierającymi krytyczne komponenty obliczeniowe.
+
+\subsubsection{Przepływ uwierzytelniania ZK}
+Proces uwierzytelniania opartego na dowodach wiedzy zerowej charakteryzuje się niezwykle złożonym, wieloetapowym przepływem danych i operacji kryptograficznych, który fundamentalnie różni się od tradycyjnych metod uwierzytelniania. Każdy etap tego procesu wymaga precyzyjnej koordinacji między warstwą kliencką a serwerową, jednocześnie zachowując fundamentalną właściwość zero-knowledge - serwer nigdy nie uzyskuje dostępu do informacji pozwalających na rekonstrukcję oryginalnego hasła użytkownika.
+
+\paragraph{Proces rejestracji}
+Procedura rejestracji nowego użytkownika w systemie ZK-Auth rozpoczyna się od wprowadzenia przez użytkownika podstawowych danych uwierzytelniających: nazwy użytkownika, hasła oraz dodatkowej soli kryptograficznej. Te dane wejściowe, wprowadzone w postaci zwykłego tekstu przez interfejs aplikacji webowej, stają się następnie przedmiotem serii skomplikowanych transformacji kryptograficznych realizowanych w pełni po stronie klienta.
+
+Kluczowym momentem procesu rejestracji jest transformacja danych tekstowych do postaci BigInt przy wykorzystaniu funkcji Poseidon hash implementowanej przez bibliotekę Garaga. Ta operacja nie jest jedynie prostą konwersją formatu, lecz stanowi fundamentalny element architektury systemu, zapewniający matematyczną spójność między obliczeniami realizowanymi w przeglądarce a tymi wykonywanymi na serwerze. Funkcja Poseidon, będąca kryptograficznie silną funkcją skrótu zaprojektowaną specjalnie dla środowisk zero-knowledge, przekształca wprowadzone dane tekstowe w deterministyczne, ale nieprzewidywalne wartości numeryczne o wysokiej entropii.
+
+Następnym krokiem jest kompilacja obwodu Noir oraz generacja kluczy weryfikacyjnych, co stanowi najbardziej obliczeniowo intensywny etap całego procesu. System inicjuje kompilator Noir, który analizuje zdefiniowany obwód kryptograficzny, optymalizuje jego strukturę algebraiczną, a następnie generuje pary kluczy: klucz prywatny służący do generowania dowodów oraz klucz publiczny umożliwiający ich weryfikację. Ten proces, realizowany w pełni w środowisku przeglądarki przy użyciu technologii WebAssembly, może wymagać kilku sekund intensywnych obliczeń, w zależności od złożoności obwodu oraz mocy obliczeniowej urządzenia klienta.
+
+Po zakończeniu fazy przygotowawczej system przystępuje do generowania właściwego dowodu SNARK, który stanowi kryptograficzne potwierdzenie znajomości hasła bez jego ujawniania. Dowód ten zawiera matematyczny wniosek udowadniający, że użytkownik posiada wiedzę o wartościach wejściowych (hasło i sól), które po zastosowaniu funkcji Poseidon generują określony, publicznie znany skrót. Proces generowania dowodu wykorzystuje zaawansowane techniki kryptograficzne oparte na problemach dyskretnego logarytmu na krzywych eliptycznych, tworząc kompaktową reprezentację matematyczną tego dowodzenia.
+
+Końcowym etapem procesu rejestracji jest transmisja wygenerowanego dowodu wraz z publicznymi parametrami wejściowymi do serwera aplikacji. Serwer, wykorzystując otrzymane klucze weryfikacyjne oraz bibliotekę UltraHonk, przeprowadza matematyczną weryfikację poprawności dowodu, nie uzyskując przy tym jakiejkolwiek informacji o oryginalnym haśle użytkownika. W przypadku pomyślnej weryfikacji, system zapisuje w bazie danych skrót kryptograficzny użytkownika oraz klucze weryfikacyjne, umożliwiając przyszłe procesy uwierzytelniania.
+
+\paragraph{Proces logowania}
+Procedura logowania w systemie ZK-Auth charakteryzuje się podobną złożonością do procesu rejestracji, jednak różni się kluczowymi detalami implementacyjnymi. Użytkownik wprowadza swoje dane uwierzytelniające w identycznej postaci jak podczas rejestracji, lecz tym razem system musi zweryfikować ich poprawność względem wcześniej zarejestrowanych danych, nie mając bezpośredniego dostępu do oryginalnych wartości.
+
+Warstwa kliencka aplikacji, po otrzymaniu danych uwierzytelniających, inicjuje proces generowania nowego dowodu SNARK wykorzystując identyczne parametry i algorytmy jak podczas rejestracji. Kluczowym aspektem tego procesu jest deterministyczność obliczeń - identyczne dane wejściowe muszą generować identyczne dowody, co umożliwia serwerowi weryfikację autentyczności bez poznania oryginalnych danych. System ponownie wykorzystuje wcześniej skompilowany obwód Noir oraz zapisane klucze kryptograficzne, znacznie przyspieszając proces w porównaniu do pierwszej rejestracji.
+
+Wygenerowany dowód, wraz z towarzyszącymi mu publicznymi parametrami, zostaje przesłany do serwera w bezpieczny sposób. Serwer aplikacji, mając dostęp do wcześniej zapisanych kluczy weryfikacyjnych oraz skrótu kryptograficznego użytkownika, przeprowadza proces weryfikacji dowodu przy użyciu protokołu UltraHonk. Weryfikacja ta potwierdza matematycznie, że przedłożony dowód został wygenerowany przez osobę posiadającą wiedzę o danych, które po zastosowaniu funkcji Poseidon generują oczekiwany skrót kryptograficzny.
+
+W przypadku pomyślnej weryfikacji dowodu, serwer autoryzuje użytkownika i ustanawia bezpieczną sesję aplikacyjną. Cały proces logowania realizuje w ten sposób fundamentalną właściwość zero-knowledge: serwer uzyskuje matematyczną pewność co do autentyczności użytkownika, nie poznając przy tym żadnych informacji o jego haśle czy mechanizmie jego weryfikacji.
+
+[PLACEHOLDER: Diagram - Schemat przepływu danych w procesie ZK authentication]
+
+\subsubsection{Kluczowe komponenty techniczne}
+\paragraph{Funkcja Poseidon Hash}
+System wykorzystuje funkcję Poseidon hash zarówno w frontend'ie jak i backend'ie, zapewniając matematyczną spójność obliczeń. Garaga umożliwia identyczne obliczenia po obu stronach systemu, co jest kluczowe dla poprawności dowodów.
+
+\paragraph{Obwód Noir}
+Zdefiniowany obwód kryptograficzny implementuje logikę dowodzenia znajomości hasła poprzez:
+\begin{itemize}
+    \item Przyjęcie prywatnych inputów (hasło, sól)
+    \item Obliczenie Poseidon hash z tych wartości
+    \item Porównanie z oczekiwanym hashem (publiczny input)
+    \item Wygenerowanie dowodu poprawności bez ujawniania prywatnych danych
+\end{itemize}
+
+[PLACEHOLDER: Screenshot - Interfejs ZK rejestracji z loadingiem podczas generowania proof]
+
+\subsubsection{Zalety Zero-Knowledge Authentication}
+\begin{itemize}
+    \item \textbf{Właściwość zero-knowledge} – serwer nigdy nie poznaje ani nie przetwarza rzeczywistego hasła użytkownika
+    \item \textbf{Kryptograficznie udowodnione bezpieczeństwo} – oparte na matematycznych gwarancjach zamiast założeń zaufania
+    \item \textbf{Odporność na kompromitację serwera} – nawet przejęcie pełnych danych serwera nie ujawnia haseł użytkowników
+    \item \textbf{Eliminacja scentralizowanego zaufania} – bezpieczeństwo oparte na matematyce, nie na zaufaniu do implementacji serwera
+    \item \textbf{Niemożność przeprowadzenia ataków offline} – brak danych pozwalających na ataki brute-force po stronie ataczkującego
+    \item \textbf{Przyszłościowość} – technologia rozwijana jako standard dla prywatnych systemów uwierzytelniania
+\end{itemize}
+
+\subsubsection{Wady Zero-Knowledge Authentication}
+\begin{itemize}
+    \item \textbf{Złożoność obliczeniowa} – generowanie dowodu SNARK wymaga znaczących zasobów obliczeniowych (kilka sekund)
+    \item \textbf{Duży rozmiar dowodu} – wygenerowane dowody mogą osiągać rozmiary rzędu dziesiątek megabajtów
+    \item \textbf{Kompleksowość techniczna implementacji} – wymaga głębokiej znajomości kryptografii i matematyki
+    \item \textbf{Wymagania kompatybilności} – potrzeba nowoczesnych przeglądarek obsługujących WebAssembly
+    \item \textbf{Czas weryfikacji} – choć krótszy niż generowanie, nadal znacząco dłuższy od tradycyjnych metod
+    \item \textbf{Ograniczona dostępność narzędzi} – ekosystem bibliotek i frameworków nadal się rozwija
+\end{itemize}
+
+[PLACEHOLDER: Screenshot - Porównanie czasów wykonania wszystkich trzech metod w formie tabeli lub wykresu]
+
+\subsection{Analiza porównawcza}
+
+W celu kompleksowego porównania zaimplementowanych metod uwierzytelniania przeprowadzono analizę w następujących wymiarach:
+
+\subsubsection{Porównanie bezpieczeństwa}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Aspekt bezpieczeństwa} & \textbf{Proste} & \textbf{Argon2} & \textbf{ZK-Auth} \\
+\hline
+Ochrona przed MITM & \textcolor{red}{Nie} & \textcolor{orange}{Częściowa} & \textcolor{green}{Tak} \\
+\hline
+Odporność na server breach & \textcolor{red}{Nie} & \textcolor{orange}{Ograniczona} & \textcolor{green}{Tak} \\
+\hline
+Ataki brute-force & \textcolor{red}{Podatne} & \textcolor{green}{Odporne} & \textcolor{green}{Odporne} \\
+\hline
+Znajomość hasła przez serwer & \textcolor{red}{Tak} & \textcolor{red}{Możliwa} & \textcolor{green}{Nie} \\
+\hline
+Matematyczne gwarancje & \textcolor{red}{Nie} & \textcolor{orange}{Częściowe} & \textcolor{green}{Tak} \\
+\hline
+\end{tabular}
+\caption{Porównanie aspektów bezpieczeństwa metod uwierzytelniania}
+\end{table}
+
+\subsubsection{Charakterystyka wydajnościowa}
+Każda z zaimplementowanych metod uwierzytelniania charakteryzuje się odmiennymi właściwościami wydajnościowymi, które wynikają bezpośrednio z zastosowanych mechanizmów kryptograficznych oraz złożoności obliczeniowej realizowanych operacji.
+
+Metoda prostego uwierzytelniania tekstowego, ze względu na całkowity brak jakichkolwiek transformacji kryptograficznych, zapewnia niemal natychmiastową weryfikację tożsamości użytkownika. Operacje rejestracji i logowania wykonywane są w czasie nieprzekraczającym kilku milisekund, a zużycie zasobów obliczeniowych pozostaje na minimalnym poziomie zarówno po stronie klienta, jak i serwera.
+
+System oparty na hashowaniu Argon2 wprowadza znaczący, ale kontrolowany narzut obliczeniowy. Parametry algorytmu zostały skonfigurowane w taki sposób, aby zapewnić odpowiedni poziom bezpieczeństwa przy zachowaniu akceptowalnego czasu wykonania operacji. Typowy czas rejestracji oraz logowania mieści się w przedziale kilkuset milisekund, co stanowi rozsądny kompromis między bezpieczeństwem a użytecznością systemu.
+
+Metoda Zero-Knowledge Authentication charakteryzuje się znacznie wyższą złożonością obliczeniową, co przekłada się na wydłużony czas wykonania operacji uwierzytelniania. Proces generowania dowodów SNARK wymaga intensywnych obliczeń algebraicznych realizowanych w środowisku przeglądarki, co może wymagać kilku sekund w zależności od mocy obliczeniowej urządzenia końcowego użytkownika. Niemniej jednak, ten narzut czasowy jest w pełni uzasadniony przez niespotykany poziom bezpieczeństwa oferowany przez tę metodę.
+
+\subsubsection{Złożoność implementacji}
+Analiza złożoności implementacyjnej pod kątem:
+\begin{itemize}
+    \item \textbf{Liczba linii kodu} – ZK-Auth wymaga ~3x więcej kodu niż Argon2
+    \item \textbf{Liczba zależności} – ZK-Auth wprowadza 8 dodatkowych bibliotek kryptograficznych
+    \item \textbf{Czas implementacji} – szacowany stosunek 1:3:12 dla prostej:Argon2:ZK
+    \item \textbf{Wymagane kompetencje} – ZK-Auth wymaga znajomości kryptografii i matematyki dyskretnej
+\end{itemize}
+
+\subsection{Wnioski projektowe}
+
+\subsubsection{Rekomendacje zastosowania}
+Na podstawie przeprowadzonej analizy można sformułować następujące rekomendacje:
+
+\paragraph{Proste uwierzytelnianie}
+Metoda ta nie powinna być stosowana w żadnych systemach produkcyjnych. Może służyć wyłącznie jako:
+\begin{itemize}
+    \item Prototyp w fazie wczesnego rozwoju
+    \item Narzędzie edukacyjne do demonstracji problemów bezpieczeństwa
+    \item Baseline do porównań wydajnościowych
+\end{itemize}
+
+\paragraph{Hashowanie Argon2}
+Pozostaje gold standardem dla większości aplikacji komercyjnych w scenariuszach:
+\begin{itemize}
+    \item Systemy wymagające szybkiego czasu odpowiedzi
+    \item Aplikacje z ograniczonymi zasobami obliczeniowymi
+    \item Środowiska gdzie ZK-Proof nie jest wspierane
+    \item Tradycyjne aplikacje webowe i mobilne
+\end{itemize}
+
+\paragraph{Zero-Knowledge Authentication}
+Rekomendowane w sytuacjach wysokich wymagań bezpieczeństwa:
+\begin{itemize}
+    \item Aplikacje finansowe i bankowe
+    \item Systemy przechowujące wrażliwe dane osobowe
+    \item Środowiska o wysokim ryzyku kompromitacji serwera
+    \item Aplikacje zdecentralizowane (dApps)
+    \item Systemy gdzie prywatność jest kluczowa
+\end{itemize}
+
+[PLACEHOLDER: Diagram decision tree - Kiedy używać której metody uwierzytelniania]
+
+\subsubsection{Kierunki optymalizacji}
+Zidentyfikowano następujące obszary do dalszego rozwoju:
+\begin{itemize}
+    \item \textbf{Optymalizacja rozmiaru dowodu} – implementacja technik kompresji i agregacji
+    \item \textbf{Przyspieszenie generowania} – wykorzystanie acceleracji sprzętowej (GPU, WASM)
+    \item \textbf{Poprawa UX} – implementacja progresywnego ładowania i feedback'u użytkownika
+    \item \textbf{Standardizacja protokołu} – wypracowanie standardów interoperacyjności
+\end{itemize}
+
+Implementacja trzech metod uwierzytelniania wykazała, że choć ZK-Authentication wprowadza znaczące narzuty obliczeniowe, oferuje bezprecedensowy poziom bezpieczeństwa i prywatności. W miarę rozwoju technologii i poprawy wydajności, może stać się standardem dla aplikacji wymagających najwyższego poziomu bezpieczeństwa.
 
 \bibliographystyle{plain}  
 \bibliography{bibliografia}

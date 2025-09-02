@@ -17,3 +17,36 @@
 \contentsline {subsubsection}{\numberline {2.2.4}Zaufany Setup \cite {trusted_setup_panther}}{7}{}%
 \contentsline {paragraph}{Jak działa Trusted Setup?}{7}{}%
 \contentsline {paragraph}{Jak można uniknąć problemu Trusted Setup?}{8}{}%
+\contentsline {section}{\numberline {3}Projektowanie i implementacja systemu uwierzytelniania - analiza porównawcza}{9}{}%
+\contentsline {subsection}{\numberline {3.1}Założenia projektowe i wymagania systemu}{9}{}%
+\contentsline {subsubsection}{\numberline {3.1.1}Wymagania funkcjonalne}{9}{}%
+\contentsline {subsubsection}{\numberline {3.1.2}Wymagania niefunkcjonalne}{9}{}%
+\contentsline {subsubsection}{\numberline {3.1.3}Architektura systemu}{9}{}%
+\contentsline {subsection}{\numberline {3.2}Metoda 1: Proste uwierzytelnianie tekstowe}{10}{}%
+\contentsline {subsubsection}{\numberline {3.2.1}Opis implementacji}{10}{}%
+\contentsline {subsubsection}{\numberline {3.2.2}Zalety prostego uwierzytelniania}{10}{}%
+\contentsline {subsubsection}{\numberline {3.2.3}Wady prostego uwierzytelniania}{10}{}%
+\contentsline {subsection}{\numberline {3.3}Metoda 2: Uwierzytelnianie z hashowaniem (Argon2)}{11}{}%
+\contentsline {subsubsection}{\numberline {3.3.1}Opis implementacji}{11}{}%
+\contentsline {subsubsection}{\numberline {3.3.2}Zalety hashowania Argon2}{11}{}%
+\contentsline {subsubsection}{\numberline {3.3.3}Wady hashowania Argon2}{12}{}%
+\contentsline {subsection}{\numberline {3.4}Metoda 3: Zero-Knowledge Authentication}{12}{}%
+\contentsline {subsubsection}{\numberline {3.4.1}Opis implementacji}{12}{}%
+\contentsline {subsubsection}{\numberline {3.4.2}Przepływ uwierzytelniania ZK}{13}{}%
+\contentsline {paragraph}{Proces rejestracji}{13}{}%
+\contentsline {paragraph}{Proces logowania}{14}{}%
+\contentsline {subsubsection}{\numberline {3.4.3}Kluczowe komponenty techniczne}{14}{}%
+\contentsline {paragraph}{Funkcja Poseidon Hash}{14}{}%
+\contentsline {paragraph}{Obwód Noir}{14}{}%
+\contentsline {subsubsection}{\numberline {3.4.4}Zalety Zero-Knowledge Authentication}{15}{}%
+\contentsline {subsubsection}{\numberline {3.4.5}Wady Zero-Knowledge Authentication}{15}{}%
+\contentsline {subsection}{\numberline {3.5}Analiza porównawcza}{16}{}%
+\contentsline {subsubsection}{\numberline {3.5.1}Porównanie bezpieczeństwa}{16}{}%
+\contentsline {subsubsection}{\numberline {3.5.2}Analiza wydajności}{16}{}%
+\contentsline {subsubsection}{\numberline {3.5.3}Złożoność implementacji}{16}{}%
+\contentsline {subsection}{\numberline {3.6}Wnioski projektowe}{16}{}%
+\contentsline {subsubsection}{\numberline {3.6.1}Rekomendacje zastosowania}{16}{}%
+\contentsline {paragraph}{Proste uwierzytelnianie}{17}{}%
+\contentsline {paragraph}{Hashowanie Argon2}{17}{}%
+\contentsline {paragraph}{Zero-Knowledge Authentication}{17}{}%
+\contentsline {subsubsection}{\numberline {3.6.2}Kierunki optymalizacji}{17}{}%
