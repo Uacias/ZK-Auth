@@ -135,7 +135,10 @@
 			const user = await response.json();
 			console.log('Registration successful:', user);
 			
-			addToast('Registration successful! ✅', 'success');
+			// Save salt to localStorage for future logins
+		localStorage.setItem(`zk_salt_${username}`, salt);
+		
+		addToast('Registration successful! ✅', 'success');
 			isRegistered = true;
 			mode = 'login';
 
@@ -158,10 +161,23 @@
 		try {
 			await initGaraga();
 			
+			// Try to get salt from localStorage if not provided
+			let userSalt = salt;
+			if (!userSalt) {
+				const savedSalt = localStorage.getItem(`zk_salt_${username}`);
+				if (savedSalt) {
+					userSalt = savedSalt;
+					salt = userSalt; // Update the input field
+					addToast(`Salt loaded from storage: ${userSalt}`, 'info');
+				} else {
+					throw new Error('Salt not found. Please register first or enter salt manually.');
+				}
+			}
+			
 			// Convert strings to BigInt
 			const passwordBigInt = stringToBigInt(password);
 			const usernameBigInt = stringToBigInt(username);
-			const saltBigInt = stringToBigInt(salt);
+			const saltBigInt = stringToBigInt(userSalt);
 			
 			// Calculate expected hash: Poseidon(Poseidon(password, salt), username)
 			const passwordSaltHash = poseidonHashBN254(passwordBigInt, saltBigInt);
@@ -170,12 +186,12 @@
 
 			// Generate ZK proof
 			addToast('Generating ZK proof...', 'info');
-			const proof = await generateZkProof(password, username, salt, expectedHash);
+			const proof = await generateZkProof(password, username, userSalt, expectedHash);
 
 			console.log('Sending login request:', {
 				username,
 				password,
-				salt,
+				salt: userSalt,
 				proof: Array.from(proof) // Convert Uint8Array to array
 			});
 
@@ -188,7 +204,7 @@
 				body: JSON.stringify({
 					username,
 					password,
-					salt,
+					salt: userSalt,
 					proof: Array.from(proof)
 				})
 			});
@@ -278,7 +294,7 @@
 			<div class="flex gap-2">
 				<Input
 					bind:value={salt}
-					placeholder="Salt (auto-generated)"
+					placeholder="Salt (auto-gen or from storage)"
 					maxlength="15"
 					disabled={loading}
 					class="flex-1"

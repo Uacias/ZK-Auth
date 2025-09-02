@@ -29,6 +29,10 @@ export class ServerError extends Error {
     return new ServerError(`Internal server error: ${message}`, 500);
   }
 
+  static notFound(message: string, details: string[] = []): ServerError {
+    return new ServerError(message, 404, details);
+  }
+
   toJSON() {
     return {
       error: {
